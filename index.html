@@ -4371,7 +4371,7 @@ function renderTraining() {
           </div>
         </div>
         <button onclick="event.stopPropagation();delSess(${w},'${s.id}')" style="border:none;background:transparent;cursor:pointer;color:var(--txt3);padding:4px;flex-shrink:0;align-self:flex-start" title="Delete session"><i class="ti ti-trash" style="font-size:14px"></i></button>
-      </div>`).join("");
+      </div>`}).join("");
   }
   const totalDone=Object.values(S.prog).flat().filter(s=>s.done).length;
   q("adj-btn").style.display=totalDone>0?"inline-flex":"none";
