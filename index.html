@@ -1194,8 +1194,8 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
           <i class="ti ti-device-watch" style="font-size:20px;color:#fff"></i>
         </div>
         <div>
-          <div class="ctitle">Garmin Connect</div>
-          <div class="csub">Auto-sync sleep from your Garmin device</div>
+          <div class="ctitle">Garmin &amp; Calendar</div>
+          <div class="csub">Sync sleep · add training to your calendar</div>
         </div>
       </div>
     </div>
@@ -6991,22 +6991,25 @@ function renderGarminStatus() {
           </button>
         </div>`;
     }
-    // Append Direct Push section
-    const gdDiv = document.createElement("div");
-    gdDiv.style.cssText = "border-top:1px solid var(--bdr);padding-top:14px;margin-top:4px";
-    gdDiv.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Workout push (training plan → watch)</div>`;
-    settingsEl.appendChild(gdDiv);
-    _renderGDSection(gdDiv);
-    // Append iCal section
+    // ── Calendar feed — always available (needs no Garmin connection) ──
     const icalDiv = document.createElement("div");
     icalDiv.style.cssText = "border-top:1px solid var(--bdr);padding-top:14px;margin-top:14px";
     icalDiv.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Calendar feed (Google · Apple · Outlook)</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Add your training plan to your phone calendar. Updates automatically, no login needed. (Garmin Connect can't subscribe to external calendars — use your phone calendar instead.)</div>
-      <button onclick="showGarminCalendarSetup()" class="btn btn-s" style="font-weight:700">
+      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📅 Calendar feed (Google · Apple · Outlook)</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Add your training plan to your phone calendar and get reminders 30 min before each session. No login needed.</div>
+      <button onclick="showGarminCalendarSetup()" class="btn btn-p" style="font-weight:700">
         <i class="ti ti-calendar-share"></i> Set up calendar feed
       </button>`;
     settingsEl.appendChild(icalDiv);
+
+    // Workout push (only relevant once Health API is connected)
+    if (connected) {
+      const gdDiv = document.createElement("div");
+      gdDiv.style.cssText = "border-top:1px solid var(--bdr);padding-top:14px;margin-top:14px";
+      gdDiv.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Workout push (training plan → watch)</div>`;
+      settingsEl.appendChild(gdDiv);
+      _renderGDSection(gdDiv);
+    }
   }
 }
 
