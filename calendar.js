@@ -77,6 +77,7 @@ const TYPE_LABEL = {
 
 module.exports = async (req, res) => {
   const uid = req.query.uid;
+  const debug = req.query.debug === '1';
   if (!uid) {
     return res.status(400).send('Missing ?uid= parameter');
   }
@@ -87,6 +88,10 @@ module.exports = async (req, res) => {
   let eventDate = null;
   let programStart = null;
   let totalWk = 13;
+  let docCount = 0;
+  let docIds = [];
+  let fetchError = null;
+  let envOk = !!(process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY);
 
   try {
     const firestore = getDB();
@@ -97,6 +102,8 @@ module.exports = async (req, res) => {
       .get();
 
     snap.forEach(doc => {
+      docCount++;
+      docIds.push(doc.id);
       // The document ID IS the key (e.g. "prog", "eventName").
       // Value format: { _json: true, v: "<json string>" }  OR  { v: <plain value> }
       const key  = doc.id;
@@ -116,8 +123,29 @@ module.exports = async (req, res) => {
       if (key === 'totalWk')      totalWk      = value;
     });
   } catch (e) {
-    // If Firestore fails, return empty but valid calendar
+    fetchError = e.message;
     console.error('Calendar Firestore error:', e.message);
+  }
+
+  // Debug mode: ?debug=1 returns JSON explaining what the feed found
+  if (debug) {
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).send(JSON.stringify({
+      uid,
+      envVarsSet: envOk,
+      envDetail: {
+        FIREBASE_PROJECT_ID:  !!process.env.FIREBASE_PROJECT_ID,
+        FIREBASE_CLIENT_EMAIL: !!process.env.FIREBASE_CLIENT_EMAIL,
+        FIREBASE_PRIVATE_KEY:  !!process.env.FIREBASE_PRIVATE_KEY,
+      },
+      fetchError,
+      docsFound: docCount,
+      docIds,
+      progWeeks: Object.keys(prog || {}),
+      eventName,
+      programStart,
+      totalWk,
+    }, null, 2));
   }
 
   // Compute the date of a session (day within a specific week)
@@ -171,7 +199,7 @@ module.exports = async (req, res) => {
         `Type: ${typeLabel}`,
         s.gym       ? 'Gym required'              : null,
         `Week ${wk} of ${totalWk} · ${eventName}`,
-      ].filter(Boolean).join('\\n');
+      ].filter(Boolean).join('\n');
 
       events.push([
         'BEGIN:VEVENT',
