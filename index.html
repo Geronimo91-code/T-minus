@@ -6246,7 +6246,7 @@ function showGarminDirectSetup() {
       </button>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)">
         <div style="font-size:12px;color:var(--txt3);margin-bottom:8px">No account for direct push? Add your plan to your phone calendar instead:</div>
-        <button onclick="showGarminCalendarSetup();document.getElementById('gd-auth-modal').style.display='none'"
+        <button onclick="showCalendarSetup();document.getElementById('gd-auth-modal').style.display='none'"
           class="btn btn-s" style="width:100%;justify-content:center;font-size:12px">
           <i class="ti ti-calendar-share"></i> Set up calendar feed
         </button>
@@ -6413,10 +6413,10 @@ function _renderGDSection(el) {
 
 function _icalUrl() {
   const uid = window._userKey || window._uid || "";
-  return `${window.location.origin}/api/garmin-calendar?uid=${encodeURIComponent(uid)}`;
+  return `${window.location.origin}/api/calendar?uid=${encodeURIComponent(uid)}`;
 }
 
-function showGarminCalendarSetup() {
+function showCalendarSetup() {
   const url = _icalUrl();
   let modal = document.getElementById("gcal-modal");
   if (modal) { modal.style.display = "flex"; return; }
@@ -6997,7 +6997,7 @@ function renderGarminStatus() {
     icalDiv.innerHTML = `
       <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📅 Calendar feed (Google · Apple · Outlook)</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Add your training plan to your phone calendar and get reminders 30 min before each session. No login needed.</div>
-      <button onclick="showGarminCalendarSetup()" class="btn btn-p" style="font-weight:700">
+      <button onclick="showCalendarSetup()" class="btn btn-p" style="font-weight:700">
         <i class="ti ti-calendar-share"></i> Set up calendar feed
       </button>`;
     settingsEl.appendChild(icalDiv);
