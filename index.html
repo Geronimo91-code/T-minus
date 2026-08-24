@@ -976,6 +976,7 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
       </button>
     </div>
     <div id="plan-mode-action"></div>
+    <button class="btn btn-p" style="margin-top:8px;width:100%;justify-content:center" onclick="startGuidedPlan()"><i class="ti ti-messages"></i> Plan this week with AI (guided)</button>
     <div style="display:none" id="adj-btn-wrap">
       <button class="btn btn-s" id="adj-btn" onclick="genAI(true)" style="margin-top:8px"><i class="ti ti-brain"></i> Adjust to my progress</button>
     </div>
@@ -2589,7 +2590,36 @@ async function callAI(prompt) {
   }
 }
 
-// ─── COUNTDOWN (no auto-retry) ──────────────────────────
+// Multi-turn variant — accepts a full messages array (for guided planning chat)
+async function callAIMessages(messages) {
+  if (_aiLock) throw new Error("BUSY");
+  const now = Date.now();
+  if (now - _lastCallMs < MIN_CALL_GAP_MS) throw new Error("BUSY");
+  _aiLock = true; _lastCallMs = now;
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: DEFAULT_MODEL, messages, max_tokens: 400, temperature: 0.6 })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      const msg = data?.error?.message || ("API error "+res.status);
+      if (res.status===429) {
+        const lower = msg.toLowerCase();
+        if (lower.includes("day")||lower.includes("daily")||lower.includes("credit")) throw new Error("DAILY_QUOTA");
+        throw new Error("QUOTA");
+      }
+      if (res.status===401||res.status===403) throw new Error("AUTH: Check your OpenRouter key");
+      throw new Error(msg.substring(0,150));
+    }
+    const raw = data?.choices?.[0]?.message?.content || "";
+    if (!raw) throw new Error("Empty response from AI");
+    return raw.trim();
+  } finally {
+    setTimeout(() => { _aiLock = false; }, MIN_CALL_GAP_MS);
+  }
+}
 let _countdownTimer = null;
 function showCountdown(sec, containerId, message) {
   clearInterval(_countdownTimer);
@@ -4925,6 +4955,151 @@ async function genAllWeeks() {
 }
 
 // ─── AI PLAN ─────────────────────────────────────────────
+// ─── GUIDED AI PLANNING (conversational intake before generating) ───
+let _guidedHistory = [];
+
+function startGuidedPlan() {
+  _guidedHistory = [];
+  let modal = q("guided-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "guided-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:4000;display:flex;align-items:flex-end;justify-content:center";
+    document.body.appendChild(modal);
+  }
+  modal.style.display = "flex";
+  modal.innerHTML = `
+    <div style="background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:560px;height:82vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.4)">
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-messages" style="font-size:20px;color:#fff"></i></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:800">Plan Week ${S.vwk} together</div>
+          <div style="font-size:12px;color:var(--txt2)">Tell me about your week, then I'll build it</div>
+        </div>
+        <button onclick="closeGuided()" style="border:none;background:transparent;color:var(--txt3);cursor:pointer;font-size:22px;padding:4px">×</button>
+      </div>
+      <div id="guided-messages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px"></div>
+      <div id="guided-input-row" style="padding:12px 16px;border-top:1px solid var(--bdr);display:flex;gap:8px">
+        <input id="guided-input" type="text" placeholder="Type your answer…" onkeydown="if(event.key==='Enter')sendGuided()" style="flex:1">
+        <button class="btn btn-p" onclick="sendGuided()" style="flex-shrink:0"><i class="ti ti-send"></i></button>
+      </div>
+      <div id="guided-generate-row" style="display:none;padding:12px 16px;border-top:1px solid var(--bdr)">
+        <button class="btn btn-p" style="width:100%;justify-content:center" onclick="generateFromGuided()"><i class="ti ti-sparkles"></i> Generate my Week ${S.vwk} plan</button>
+      </div>
+    </div>`;
+
+  // Opening message from the coach
+  const teams=(S.prog[S.vwk]||[]).filter(s=>s.isTeam);
+  const teamNote = teams.length ? ` I can see you already have ${teams.length} team practice${teams.length>1?"s":""} logged this week.` : "";
+  _guidedAddMsg("coach", `Let's plan Week ${S.vwk}.${teamNote}\n\nTo start: which days do you have **team practice** this week, and roughly what time? (Or say "none" if no team sessions.)`);
+}
+
+function _guidedAddMsg(who, text) {
+  const box = q("guided-messages");
+  if (!box) return;
+  const isCoach = who === "coach";
+  const div = document.createElement("div");
+  div.style.cssText = `max-width:85%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;${isCoach
+    ? "align-self:flex-start;background:var(--sur2);color:var(--txt);border-bottom-left-radius:4px"
+    : "align-self:flex-end;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-bottom-right-radius:4px"}`;
+  // basic bold parsing
+  div.innerHTML = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendGuided() {
+  const inp = q("guided-input");
+  const text = inp?.value?.trim();
+  if (!text) return;
+  inp.value = "";
+  _guidedAddMsg("user", text);
+  _guidedHistory.push({ role:"user", content:text });
+
+  // Typing indicator
+  _guidedAddMsg("coach", "…");
+  const box = q("guided-messages");
+  const typingEl = box.lastChild;
+
+  try {
+    const sys = `You are an elite ${S.sport} coach helping plan Week ${S.vwk} of ${getTotalWk()} for an athlete preparing for ${S.eventName} (${daysToEvent()} days away). Position: ${S.position||"general"}. Phase: ${(phaseOf(S.vwk)||{}).n||"training"}.
+Your job: ask SHORT, focused questions to understand this week's constraints — team practices (days/times), how many personal sessions they want, gym access, energy/soreness, anything to work around. Ask ONE thing at a time. Keep replies to 1-2 sentences. After 2-3 exchanges when you have enough, end your message with exactly "[READY]" on its own line to signal you can generate the plan. Do not generate the plan yourself — just gather info.`;
+    const msgs = [{role:"system",content:sys}, ..._guidedHistory];
+    const reply = await callAIMessages(msgs);
+    typingEl.remove();
+    const ready = /\[READY\]/i.test(reply);
+    const clean = reply.replace(/\[READY\]/ig,"").trim();
+    _guidedAddMsg("coach", clean);
+    _guidedHistory.push({ role:"assistant", content:clean });
+    if (ready) {
+      q("guided-input-row").style.display = "none";
+      q("guided-generate-row").style.display = "block";
+    }
+  } catch(e) {
+    typingEl.remove();
+    _guidedAddMsg("coach", "Hm, I had trouble there ("+e.message+"). You can still tap Generate below to build from what we have.");
+    q("guided-generate-row").style.display = "block";
+  }
+}
+
+async function generateFromGuided() {
+  const btn = q("guided-generate-row")?.querySelector("button");
+  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Building your week…'; }
+
+  const convo = _guidedHistory.map(m => `${m.role==="user"?"Athlete":"Coach"}: ${m.content}`).join("\n");
+  const p = phaseOf(S.vwk) || buildDefaultPhases()[0];
+  const teams = (S.prog[S.vwk]||[]).filter(s=>s.isTeam);
+
+  const prompt =
+`Elite ${S.sport} coach. Generate the Week ${S.vwk}/${getTotalWk()} training plan based on this conversation with the athlete.
+
+EVENT: ${S.eventName} — ${daysToEvent()} days away.
+SPORT: ${S.sport}. POSITION: ${S.position||"general athlete"}.
+PHASE: ${p.n} — ${p.dim}.
+
+CONVERSATION (use these constraints as the source of truth):
+${convo}
+
+${teams.length?`Existing team practices (keep, do NOT conflict): ${JSON.stringify(teams.map(t=>({d:t.d,time:t.time})))}`:""}
+
+Return ONLY valid JSON — no markdown, no text outside JSON:
+{"theme":"weekly focus 6-8 words","sessions":[{"id":"w${S.vwk}s1","d":"Mon","time":"06:30","min":60,"type":"skills","title":"Session title","notes":"specific exercises 12-15 words","intensity":"medium","gym":false}]}
+
+RULES:
+- d: Mon Tue Wed Thu Fri Sat Sun only
+- type: conditioning|skills|team|recovery|rest|gym
+- intensity: low|medium|high|max|rest
+- Respect the days/times the athlete gave. Don't invent sessions on days they said they're busy or resting.
+- At least 1 recovery/rest day. No back-to-back high/max days.`;
+
+  try {
+    const txt = await callAI(prompt);
+    const jsonStr = txt.match(/\{[\s\S]*\}/)?.[0];
+    if (!jsonStr) throw new Error("No JSON returned");
+    const parsed = JSON.parse(jsonStr);
+    if (parsed.sessions?.length) {
+      if (!S.prog) S.prog = {};
+      const existTeams = ((S.prog||{})[S.vwk]||[]).filter(s=>s.isTeam);
+      S.prog[S.vwk] = [
+        ...parsed.sessions.map(s=>({...s, done:false, theme:parsed.theme||"", rpe:null})),
+        ...existTeams,
+      ];
+      sortWk(S.vwk); LS.s("prog", S.prog);
+      closeGuided();
+      renderTraining(); renderDash();
+      toast("✓ Week "+S.vwk+" plan created", "var(--grn)");
+    } else throw new Error("No sessions in response");
+  } catch(e) {
+    if (btn) { btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Generate my Week '+S.vwk+' plan'; }
+    toast("Couldn't generate: "+e.message+" — try again", "var(--red)");
+  }
+}
+
+function closeGuided() {
+  const m = q("guided-modal");
+  if (m) m.style.display = "none";
+}
+
 async function genAI(adjust=false) {
   if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Generating...';}
   hidePlanErr();q("plan-retry").style.display="none";
