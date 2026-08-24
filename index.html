@@ -758,6 +758,16 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 <!-- PROGRESS -->
 <section class="page" id="p-progress">
   <div class="card">
+    <div class="cp">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div class="ctitle">Performance trends</div>
+        <i class="ti ti-trending-up" style="font-size:16px;color:var(--grn)"></i>
+      </div>
+      <div class="csub" style="margin-bottom:14px">Your logged numbers over time — lifts, tests, anything measurable</div>
+      <div id="perf-graphs"></div>
+    </div>
+  </div>
+  <div class="card">
     <div class="cp" style="cursor:pointer;user-select:none" onclick="toggleSection('week-summary-body','week-sum-icon')">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="display:flex;align-items:center;gap:10px">
@@ -976,7 +986,7 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
       </button>
     </div>
     <div id="plan-mode-action"></div>
-    <button class="btn btn-p" style="margin-top:8px;width:100%;justify-content:center" onclick="startGuidedPlan()"><i class="ti ti-messages"></i> Plan this week with AI (guided)</button>
+    <button class="btn btn-p" style="margin-top:8px;width:100%;justify-content:center" onclick="startGuidedPlan()"><i class="ti ti-calendar-plus"></i> Plan this week (tap to build)</button>
     <div style="display:none" id="adj-btn-wrap">
       <button class="btn btn-s" id="adj-btn" onclick="genAI(true)" style="margin-top:8px"><i class="ti ti-brain"></i> Adjust to my progress</button>
     </div>
@@ -1127,6 +1137,18 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
       <label class="set-label">Event date</label>
       <input type="date" id="set-event-date" onchange="saveSettings()"
         style="font-size:15px;font-family:inherit;border:1px solid var(--bdr);background:var(--sur2);color:var(--txt);border-radius:var(--rx);padding:9px 12px;outline:none;width:100%;font-weight:600">
+    </div>
+    <div class="set-row">
+      <label class="set-label">Your bodyweight</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="set-bodyweight" min="30" max="250" step="0.5" onchange="saveSettings()" placeholder="e.g. 78"
+          style="flex:1;font-size:15px;font-family:inherit;border:1px solid var(--bdr);background:var(--sur2);color:var(--txt);border-radius:var(--rx);padding:9px 12px;outline:none;font-weight:600">
+        <div style="display:flex;border:1px solid var(--bdr);border-radius:var(--rx);overflow:hidden">
+          <button id="unit-kg" onclick="setWeightUnit('kg')" style="padding:9px 14px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">kg</button>
+          <button id="unit-lbs" onclick="setWeightUnit('lbs')" style="padding:9px 14px;border:none;background:var(--sur2);color:var(--txt2);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">lbs</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:5px">Used to turn AI strength targets (e.g. 70% bodyweight) into real numbers.</div>
     </div>
     <div style="padding:14px 16px">
       <button class="btn btn-p" style="width:100%;justify-content:center" onclick="saveSettings()">
@@ -2533,6 +2555,7 @@ const S_DEFAULTS = {
   supps:[], vitSched:null,
   prog:{}, key:"", url:"",
   testLog:[], weekLog:{}, sleepLog:[], sched:null,
+  perfHistory:{}, bodyweight:null, weightUnit:"kg",
   // fuel / nutrition
   fuelWeight:null, fuelGoal:"performance", fuelEventPlan:null,
   fuelHeight:null, fuelAge:null, fuelExperience:"intermediate",
@@ -3076,6 +3099,9 @@ function _hydrate(forceDefaults) {
     S[k] = LS.g(k, def === null ? (k==="sched"?DEFAULT_SCHED:null) : def);
   });
   S.tests   = LS.g("tests", sportProfile().tests);
+  S.perfHistory = LS.g("perfHistory", {});
+  S.bodyweight = LS.g("bodyweight", null);
+  S.weightUnit = LS.g("weightUnit", "kg");
   S.vwk     = Math.max(1, curWk());
   S.sumWeek = curWk();
 
@@ -3180,7 +3206,7 @@ function switchUser() {
 // Keys that are wiped in a training-only reset
 const _TRAINING_KEYS = [
   "prog","vwk","sched","testLog","weekLog","phases","phase_rationale",
-  "programStart","totalWk","sumWeek","tests","garmin_act_sync"
+  "programStart","totalWk","sumWeek","tests","garmin_act_sync","perfHistory","bodyweight","weightUnit"
 ];
 
 // Keys that are also wiped in a full reset (on top of training keys)
@@ -3583,6 +3609,8 @@ function renderSettings() {
   // Event fields — guard against undefined/null
   if (q("set-event-name")) q("set-event-name").value = S.eventName || "";
   if (q("set-event-date")) q("set-event-date").value = S.eventDate || "";
+  if (q("set-bodyweight")) q("set-bodyweight").value = S.bodyweight || "";
+  setWeightUnit(S.weightUnit || "kg");
   // API fields
   if (q("api-key-inp")) q("api-key-inp").value = S.key ? "••••••••••••" : "";
   if (q("api-url-inp")) q("api-url-inp").value = S.url || DEFAULT_URL;
@@ -3668,6 +3696,18 @@ Include 5-6 relevant fitness tests and 3-4 sessions per phase. Be specific to ${
   }
 }
 
+function setWeightUnit(unit) {
+  S.weightUnit = unit;
+  LS.s("weightUnit", unit);
+  const kg = q("unit-kg"), lbs = q("unit-lbs");
+  if (kg && lbs) {
+    kg.style.background  = unit==="kg" ? "var(--acc)" : "var(--sur2)";
+    kg.style.color       = unit==="kg" ? "#fff" : "var(--txt2)";
+    lbs.style.background = unit==="lbs" ? "var(--acc)" : "var(--sur2)";
+    lbs.style.color      = unit==="lbs" ? "#fff" : "var(--txt2)";
+  }
+}
+
 async function saveSettings() {
   const sportEl = q("set-sport");
   const posEl   = q("set-pos");
@@ -3677,6 +3717,8 @@ async function saveSettings() {
   if (posEl)   S.position = posEl.value;
   if (evName)  S.eventName = evName.value;
   if (evDate && evDate.value) S.eventDate = evDate.value;
+  const bwEl = q("set-bodyweight");
+  if (bwEl && bwEl.value) { S.bodyweight = +bwEl.value; LS.s("bodyweight", S.bodyweight); }
 
   // Recompute total weeks if date changed
   let newWeeks = null;
@@ -3979,6 +4021,63 @@ function renderDash() {
 }
 
 // ─── PROGRESS ────────────────────────────────────────────
+// Render an SVG line graph for every metric in perfHistory with 2+ points
+function renderPerfGraphs() {
+  const el = q("perf-graphs");
+  if (!el) return;
+  const hist = S.perfHistory || {};
+  const series = Object.entries(hist).filter(([,pts]) => (pts||[]).length >= 2);
+
+  if (!series.length) {
+    el.innerHTML = `<div style="text-align:center;padding:22px 12px">
+      <i class="ti ti-chart-dots" style="font-size:34px;color:var(--txt3);display:block;margin-bottom:8px"></i>
+      <div style="font-size:14px;font-weight:700;margin-bottom:3px">No trends yet</div>
+      <div style="font-size:12px;color:var(--txt2);line-height:1.5">Log gym sets or record a result in your sessions.<br>Once a metric has two data points, its graph appears here.</div>
+    </div>`;
+    return;
+  }
+
+  // Colors cycle through a small palette
+  const palette = ["#378ADD","#7F77DD","#1D9E75","#EF9F27","#D85A30"];
+  el.innerHTML = series.map(([name, ptsRaw], idx) => {
+    const pts = [...ptsRaw].sort((a,b)=>(a.wk||0)-(b.wk||0));
+    const vals = pts.map(p=>+p.value);
+    const unit = pts.find(p=>p.unit)?.unit || "";
+    const first = vals[0], last = vals[vals.length-1];
+    const pct = first ? Math.round((last-first)/Math.abs(first)*100) : 0;
+    const up = last >= first;
+    const col = palette[idx % palette.length];
+
+    // Find a matching test target if one exists
+    const test = (S.tests||[]).find(t => t.name === name || name.includes(t.name));
+    const target = test?.target ? +test.target : null;
+
+    const minV = Math.min(...vals, target ?? Infinity);
+    const maxV = Math.max(...vals, target ?? -Infinity);
+    const range = (maxV - minV) || 1;
+    const W = 300, H = 90, padX = 8, padY = 12;
+    const x = i => padX + (i/(pts.length-1||1)) * (W - padX*2);
+    const y = v => padY + (1 - (v - minV)/range) * (H - padY*2);
+
+    const linePts = pts.map((p,i)=>`${x(i).toFixed(1)},${y(+p.value).toFixed(1)}`).join(" ");
+    const dots = pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(+p.value).toFixed(1)}" r="${i===pts.length-1?4:3}" fill="${i===pts.length-1?'var(--grn)':col}"/>`).join("");
+    const targetLine = target!=null ? `<line x1="${padX}" y1="${y(target).toFixed(1)}" x2="${W-padX}" y2="${y(target).toFixed(1)}" stroke="var(--grn)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/><text x="${W-padX}" y="${(y(target)-4).toFixed(1)}" fill="var(--grn)" font-size="9" text-anchor="end">target ${target}</text>` : "";
+
+    return `<div style="margin-bottom:16px;padding-bottom:16px;${idx<series.length-1?'border-bottom:1px solid var(--bdr)':''}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <div style="font-size:15px;font-weight:800;letter-spacing:-.3px">${name}</div>
+        <div style="font-size:13px;font-weight:700;color:${up?'var(--grn)':'var(--red)'}">${up?'+':''}${pct}% ${up?'↑':'↓'}</div>
+      </div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">${pts.length} entries · latest <span style="font-weight:700;color:var(--txt)">${last}${unit}</span></div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" preserveAspectRatio="none">
+        ${targetLine}
+        <polyline points="${linePts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${dots}
+      </svg>
+    </div>`;
+  }).join("");
+}
+
 function renderProgress() {
   const cw=curWk();
   q("week-chips").innerHTML=Array.from({length:cw},(_,i)=>i+1).map(w=>`
@@ -3986,6 +4085,7 @@ function renderProgress() {
       background:${S.sumWeek===w?"var(--pur-l)":"var(--sur2)"};color:${S.sumWeek===w?"var(--pur-d)":"var(--txt2)"};
       font-family:inherit;font-weight:600;white-space:nowrap" onclick="selectSumWeek(${w})">Wk ${w}</button>`).join("");
   q("sum-week-lbl").textContent=wkDates(S.sumWeek);
+  renderPerfGraphs();
   renderWeekSummary(); renderTestCards();
   const sel=q("log-test");
   if(sel){
@@ -4956,121 +5056,132 @@ async function genAllWeeks() {
 
 // ─── AI PLAN ─────────────────────────────────────────────
 // ─── GUIDED AI PLANNING (conversational intake before generating) ───
-let _guidedHistory = [];
+// ─── GUIDED PLANNING (tap-to-select form) ───
+let _planForm = null; // { teamDays:Set, counts:{gym,throwing,conditioning}, test:bool }
 
 function startGuidedPlan() {
-  _guidedHistory = [];
-  let modal = q("guided-modal");
+  _planForm = { teamDays: new Set(), counts: { gym:2, throwing:1, conditioning:1 }, test:false };
+  // Pre-select any team days already logged this week
+  ((S.prog[S.vwk]||[]).filter(s=>s.isTeam)).forEach(s=> _planForm.teamDays.add(s.d));
+
+  let modal = q("plan-modal");
   if (!modal) {
     modal = document.createElement("div");
-    modal.id = "guided-modal";
+    modal.id = "plan-modal";
     modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:4000;display:flex;align-items:flex-end;justify-content:center";
     document.body.appendChild(modal);
   }
   modal.style.display = "flex";
-  modal.innerHTML = `
-    <div style="background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:560px;height:82vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.4)">
-      <div style="display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-messages" style="font-size:20px;color:#fff"></i></div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:800">Plan Week ${S.vwk} together</div>
-          <div style="font-size:12px;color:var(--txt2)">Tell me about your week, then I'll build it</div>
-        </div>
-        <button onclick="closeGuided()" style="border:none;background:transparent;color:var(--txt3);cursor:pointer;font-size:22px;padding:4px">×</button>
-      </div>
-      <div id="guided-messages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px"></div>
-      <div id="guided-input-row" style="padding:12px 16px;border-top:1px solid var(--bdr);display:flex;gap:8px">
-        <input id="guided-input" type="text" placeholder="Type your answer…" onkeydown="if(event.key==='Enter')sendGuided()" style="flex:1">
-        <button class="btn btn-p" onclick="sendGuided()" style="flex-shrink:0"><i class="ti ti-send"></i></button>
-      </div>
-      <div id="guided-generate-row" style="display:none;padding:12px 16px;border-top:1px solid var(--bdr)">
-        <button class="btn btn-p" style="width:100%;justify-content:center" onclick="generateFromGuided()"><i class="ti ti-sparkles"></i> Generate my Week ${S.vwk} plan</button>
+  const phase = phaseOf(S.vwk) || {};
+  const DAYSHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const typeRow = (key, label, icon, col) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:0.5px solid var(--bdr)">
+      <div style="display:flex;align-items:center;gap:9px"><i class="ti ${icon}" style="font-size:18px;color:${col}"></i><span style="font-size:14px;font-weight:600">${label}</span></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="_planStep('${key}',-1)" style="width:34px;height:34px;border-radius:9px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--txt);font-size:19px;cursor:pointer;font-family:inherit">−</button>
+        <span id="cnt-${key}" style="font-size:20px;font-weight:800;min-width:20px;text-align:center">${_planForm.counts[key]}</span>
+        <button onclick="_planStep('${key}',1)" style="width:34px;height:34px;border-radius:9px;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--txt);font-size:19px;cursor:pointer;font-family:inherit">+</button>
       </div>
     </div>`;
 
-  // Opening message from the coach
-  const teams=(S.prog[S.vwk]||[]).filter(s=>s.isTeam);
-  const teamNote = teams.length ? ` I can see you already have ${teams.length} team practice${teams.length>1?"s":""} logged this week.` : "";
-  _guidedAddMsg("coach", `Let's plan Week ${S.vwk}.${teamNote}\n\nTo start: which days do you have **team practice** this week, and roughly what time? (Or say "none" if no team sessions.)`);
+  modal.innerHTML = `
+    <div style="background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.4)">
+      <div style="display:flex;align-items:center;gap:11px;padding:18px 18px 14px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--sur)">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-calendar-plus" style="font-size:20px;color:#fff"></i></div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800">Plan week ${S.vwk}</div><div style="font-size:12px;color:var(--txt2)">${phase.n||"Training"} phase · tap to build your week</div></div>
+        <button onclick="closePlan()" style="border:none;background:var(--sur2);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;color:var(--txt2)">×</button>
+      </div>
+      <div style="padding:18px">
+        <div style="font-size:11px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px"><i class="ti ti-users" style="font-size:13px;color:var(--acc)"></i> Team practice days</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:22px" id="plan-team-days">
+          ${DAYSHORT.map(d=>`<button onclick="_planTeamDay('${d}')" id="td-${d}" style="padding:7px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:${_planForm.teamDays.has(d)?'var(--acc)':'var(--sur2)'};color:${_planForm.teamDays.has(d)?'#fff':'var(--txt2)'};border:1.5px solid ${_planForm.teamDays.has(d)?'var(--acc)':'var(--bdr)'}">${d}</button>`).join("")}
+        </div>
+
+        <div style="font-size:11px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">How many of each this week?</div>
+        ${typeRow("gym","Gym / strength","ti-barbell","#D85A30")}
+        ${typeRow("throwing","Throwing","ti-disc","#1D9E75")}
+        ${typeRow("conditioning","Conditioning","ti-run","#EF9F27")}
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px">
+          <div style="display:flex;align-items:center;gap:9px"><i class="ti ti-stopwatch" style="font-size:18px;color:var(--pur)"></i><span style="font-size:14px;font-weight:600">Include a fitness test</span></div>
+          <button id="plan-test-tgl" class="tgl off" onclick="_planTest()"><div class="k"></div></button>
+        </div>
+        <div style="font-size:12px;color:var(--txt3);margin-bottom:18px">Folds a test into the week and captures the result to track progress.</div>
+
+        <div style="background:var(--sur2);border-radius:10px;padding:11px 13px;margin-bottom:18px;display:flex;gap:9px;align-items:flex-start">
+          <i class="ti ti-info-circle" style="font-size:15px;color:var(--acc);flex-shrink:0;margin-top:1px"></i>
+          <div style="font-size:12px;color:var(--txt2);line-height:1.5">Rest days fill in automatically. Sessions are placed around your team days, avoiding back-to-back hard days.</div>
+        </div>
+
+        <button class="btn btn-p" id="plan-gen-btn" style="width:100%;justify-content:center" onclick="generateFromPlan()"><i class="ti ti-sparkles"></i> Build my week ${S.vwk} plan</button>
+        <div id="plan-err" style="display:none;margin-top:10px"></div>
+      </div>
+    </div>`;
 }
 
-function _guidedAddMsg(who, text) {
-  const box = q("guided-messages");
-  if (!box) return;
-  const isCoach = who === "coach";
-  const div = document.createElement("div");
-  div.style.cssText = `max-width:85%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;${isCoach
-    ? "align-self:flex-start;background:var(--sur2);color:var(--txt);border-bottom-left-radius:4px"
-    : "align-self:flex-end;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-bottom-right-radius:4px"}`;
-  // basic bold parsing
-  div.innerHTML = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendGuided() {
-  const inp = q("guided-input");
-  const text = inp?.value?.trim();
-  if (!text) return;
-  inp.value = "";
-  _guidedAddMsg("user", text);
-  _guidedHistory.push({ role:"user", content:text });
-
-  // Typing indicator
-  _guidedAddMsg("coach", "…");
-  const box = q("guided-messages");
-  const typingEl = box.lastChild;
-
-  try {
-    const sys = `You are an elite ${S.sport} coach helping plan Week ${S.vwk} of ${getTotalWk()} for an athlete preparing for ${S.eventName} (${daysToEvent()} days away). Position: ${S.position||"general"}. Phase: ${(phaseOf(S.vwk)||{}).n||"training"}.
-Your job: ask SHORT, focused questions to understand this week's constraints — team practices (days/times), how many personal sessions they want, gym access, energy/soreness, anything to work around. Ask ONE thing at a time. Keep replies to 1-2 sentences. After 2-3 exchanges when you have enough, end your message with exactly "[READY]" on its own line to signal you can generate the plan. Do not generate the plan yourself — just gather info.`;
-    const msgs = [{role:"system",content:sys}, ..._guidedHistory];
-    const reply = await callAIMessages(msgs);
-    typingEl.remove();
-    const ready = /\[READY\]/i.test(reply);
-    const clean = reply.replace(/\[READY\]/ig,"").trim();
-    _guidedAddMsg("coach", clean);
-    _guidedHistory.push({ role:"assistant", content:clean });
-    if (ready) {
-      q("guided-input-row").style.display = "none";
-      q("guided-generate-row").style.display = "block";
-    }
-  } catch(e) {
-    typingEl.remove();
-    _guidedAddMsg("coach", "Hm, I had trouble there ("+e.message+"). You can still tap Generate below to build from what we have.");
-    q("guided-generate-row").style.display = "block";
+function _planTeamDay(d) {
+  if (!_planForm) return;
+  if (_planForm.teamDays.has(d)) _planForm.teamDays.delete(d);
+  else _planForm.teamDays.add(d);
+  const btn = q("td-"+d);
+  const on = _planForm.teamDays.has(d);
+  if (btn) {
+    btn.style.background = on ? "var(--acc)" : "var(--sur2)";
+    btn.style.color = on ? "#fff" : "var(--txt2)";
+    btn.style.borderColor = on ? "var(--acc)" : "var(--bdr)";
   }
 }
 
-async function generateFromGuided() {
-  const btn = q("guided-generate-row")?.querySelector("button");
+function _planStep(key, dir) {
+  if (!_planForm) return;
+  _planForm.counts[key] = Math.max(0, Math.min(5, _planForm.counts[key] + dir));
+  const el = q("cnt-"+key);
+  if (el) el.textContent = _planForm.counts[key];
+}
+
+function _planTest() {
+  if (!_planForm) return;
+  _planForm.test = !_planForm.test;
+  const t = q("plan-test-tgl");
+  if (t) t.className = "tgl " + (_planForm.test ? "on" : "off");
+}
+
+async function generateFromPlan() {
+  if (!_planForm) return;
+  const btn = q("plan-gen-btn");
   if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Building your week…'; }
 
-  const convo = _guidedHistory.map(m => `${m.role==="user"?"Athlete":"Coach"}: ${m.content}`).join("\n");
   const p = phaseOf(S.vwk) || buildDefaultPhases()[0];
   const teams = (S.prog[S.vwk]||[]).filter(s=>s.isTeam);
+  const c = _planForm.counts;
+  const teamDays = [..._planForm.teamDays];
 
   const prompt =
-`Elite ${S.sport} coach. Generate the Week ${S.vwk}/${getTotalWk()} training plan based on this conversation with the athlete.
+`Elite ${S.sport} coach. Generate the Week ${S.vwk}/${getTotalWk()} training plan from these exact choices.
 
 EVENT: ${S.eventName} — ${daysToEvent()} days away.
 SPORT: ${S.sport}. POSITION: ${S.position||"general athlete"}.
 PHASE: ${p.n} — ${p.dim}.
 
-CONVERSATION (use these constraints as the source of truth):
-${convo}
+ATHLETE'S CHOICES FOR THIS WEEK:
+- Team practice days: ${teamDays.length?teamDays.join(", "):"none"}
+- Gym / strength sessions: ${c.gym}
+- Throwing sessions: ${c.throwing}
+- Conditioning sessions: ${c.conditioning}
+- Include a fitness test: ${_planForm.test?"yes — schedule ONE fitness test appropriate to this phase":"no"}
+${S.bodyweight?`- Bodyweight: ${S.bodyweight} ${S.weightUnit} (use for gym load targets)`:""}
+${teams.length?`Existing team practices already logged (keep, don't duplicate): ${JSON.stringify(teams.map(t=>({d:t.d,time:t.time})))}`:""}
 
-${teams.length?`Existing team practices (keep, do NOT conflict): ${JSON.stringify(teams.map(t=>({d:t.d,time:t.time})))}`:""}
+Create exactly the number of each session type requested. Place them across the week around the team days, with at least one rest/recovery day and no back-to-back high/max days.
 
-Return ONLY valid JSON — no markdown, no text outside JSON:
-{"theme":"weekly focus 6-8 words","sessions":[{"id":"w${S.vwk}s1","d":"Mon","time":"06:30","min":60,"type":"skills","title":"Session title","notes":"specific exercises 12-15 words","intensity":"medium","gym":false}]}
+Return ONLY valid JSON — no markdown:
+{"theme":"weekly focus 6-8 words","sessions":[{"id":"w${S.vwk}s1","d":"Mon","time":"06:30","min":60,"type":"gym","title":"Session title","notes":"specific focus 10-14 words","intensity":"medium","gym":true${_planForm.test?',"isTest":false':''}}]}
 
 RULES:
-- d: Mon Tue Wed Thu Fri Sat Sun only
-- type: conditioning|skills|team|recovery|rest|gym
-- intensity: low|medium|high|max|rest
-- Respect the days/times the athlete gave. Don't invent sessions on days they said they're busy or resting.
-- At least 1 recovery/rest day. No back-to-back high/max days.`;
+- d: Mon Tue Wed Thu Fri Sat Sun. type: conditioning|skills|team|recovery|rest|gym. intensity: low|medium|high|max|rest.
+- gym:true for strength sessions. For the throwing sessions use type "skills".
+${_planForm.test?'- Mark the fitness-test session with "isTest":true and give it type "conditioning" or "skills" as fits the test.':''}
+- Respect the requested counts exactly.`;
 
   try {
     const txt = await callAI(prompt);
@@ -5085,20 +5196,22 @@ RULES:
         ...existTeams,
       ];
       sortWk(S.vwk); LS.s("prog", S.prog);
-      closeGuided();
+      closePlan();
       renderTraining(); renderDash();
       toast("✓ Week "+S.vwk+" plan created", "var(--grn)");
     } else throw new Error("No sessions in response");
   } catch(e) {
-    if (btn) { btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Generate my Week '+S.vwk+' plan'; }
-    toast("Couldn't generate: "+e.message+" — try again", "var(--red)");
+    if (btn) { btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Build my week '+S.vwk+' plan'; }
+    const errEl = q("plan-err");
+    if (errEl) { errEl.style.display="block"; errEl.innerHTML=`<div style="font-size:13px;color:var(--red);padding:8px 0">Couldn't generate: ${e.message}. Try again.</div>`; }
   }
 }
 
-function closeGuided() {
-  const m = q("guided-modal");
+function closePlan() {
+  const m = q("plan-modal");
   if (m) m.style.display = "none";
 }
+
 
 async function genAI(adjust=false) {
   if(btn){btn.disabled=true;btn.innerHTML='<div class="spin"></div> Generating...';}
@@ -5348,6 +5461,331 @@ const INTENSITY_GUIDE = {
   rest:"Zero effort. Deliberate recovery — do not train today."
 };
 
+// ─── PERFORMANCE LOGGING (set-by-set + measurable results) ───
+// A session may carry a `log`:
+//   gym:   { sets:[{weight,reps,done}], exercises:[{name, sets:[...]}] }
+//   metric:{ metric, unit, value }   (tests, throwing accuracy, etc.)
+// Measurable results are also mirrored into S.perfHistory for graphing.
+
+function _ensurePerfHistory() {
+  if (!S.perfHistory) S.perfHistory = {};   // { "metric name": [{date, wk, value, unit}] }
+  return S.perfHistory;
+}
+
+// Record a measurable data point into the history series (for Progress graphs)
+function recordMetric(name, value, unit, wk) {
+  if (name == null || value == null || value === "" || isNaN(+value)) return;
+  const h = _ensurePerfHistory();
+  if (!h[name]) h[name] = [];
+  const today = new Date().toISOString().slice(0,10);
+  // Replace an existing entry for the same week, else append
+  const existing = h[name].find(e => e.wk === wk);
+  if (existing) { existing.value = +value; existing.date = today; existing.unit = unit||existing.unit; }
+  else h[name].push({ date: today, wk: wk ?? S.vwk, value: +value, unit: unit||"" });
+  h[name].sort((a,b)=> (a.wk||0)-(b.wk||0) || a.date.localeCompare(b.date));
+  LS.s("perfHistory", S.perfHistory);
+}
+
+// Save a gym session's set log onto the session object
+function saveSetLog(wk, sessId, sets) {
+  const arr = S.prog[wk] || [];
+  const i = arr.findIndex(s => s.id === sessId);
+  if (i < 0) return;
+  arr[i] = { ...arr[i], log: { ...(arr[i].log||{}), sets } };
+  // If every set is done, mark the session done
+  const allDone = sets.length > 0 && sets.every(s => s.done);
+  if (allDone) arr[i].done = true;
+  S.prog[wk] = arr;
+  LS.s("prog", S.prog);
+  // Mirror top-set weight into history (heaviest completed set)
+  const completed = sets.filter(s => s.done && +s.weight > 0);
+  if (completed.length) {
+    const top = Math.max(...completed.map(s => +s.weight));
+    recordMetric(arr[i].title, top, "kg", wk);
+  }
+}
+
+// Save a measurable test/accuracy result
+function saveMetricResult(wk, sessId, name, value, unit) {
+  const arr = S.prog[wk] || [];
+  const i = arr.findIndex(s => s.id === sessId);
+  if (i >= 0) {
+    arr[i] = { ...arr[i], log: { metric: name, unit, value: +value }, done: true };
+    S.prog[wk] = arr; LS.s("prog", S.prog);
+  }
+  recordMetric(name, value, unit, wk);
+  renderTraining(); renderDash();
+}
+
+// Build the initial set array for a gym exercise, prefilling weight/reps:
+//   1) last week's logged sets for this exact lift  2) AI targetWeight  3) blank
+function _buildSetRows(sess, wk, ex) {
+  const numSets = Math.max(1, parseInt(ex.sets) || 3);
+  const targetReps = (parseInt(ex.reps) || "") + "";
+  const targetW = ex.targetWeight != null ? +ex.targetWeight : "";
+
+  // Look for last week's log for this exact exercise name
+  let lastSets = null;
+  for (let w = wk - 1; w >= 1 && !lastSets; w--) {
+    const prevSess = (S.prog[w]||[]).find(s => s.log?.exercises?.some(e => e.name === ex.name));
+    if (prevSess) {
+      const prevEx = prevSess.log.exercises.find(e => e.name === ex.name);
+      if (prevEx?.sets?.length) lastSets = prevEx.sets;
+    }
+  }
+
+  // If this session already has a saved log for this exercise, use it
+  const savedEx = sess.log?.exercises?.find(e => e.name === ex.name);
+  if (savedEx?.sets?.length) return { rows: savedEx.sets, lastTop: lastSets ? Math.max(...lastSets.map(s=>+s.weight||0)) : null };
+
+  const rows = [];
+  for (let i = 0; i < numSets; i++) {
+    const last = lastSets?.[i];
+    rows.push({
+      weight: last?.weight ?? (targetW || ""),
+      reps:   last?.reps   ?? targetReps,
+      done:   false,
+    });
+  }
+  return { rows, lastTop: lastSets ? Math.max(...lastSets.map(s=>+s.weight||0)) : null };
+}
+
+// In-memory working log for the open session modal
+let _openSessLog = null; // { wk, sessId, exercises:[{name, sets:[{weight,reps,done}]}] }
+
+function _setCell(exIdx, setIdx, field, val) {
+  if (!_openSessLog) return;
+  const ex = _openSessLog.exercises[exIdx];
+  if (!ex) return;
+  ex.sets[setIdx][field] = field==="done" ? val : (val===""?"":+val);
+  _persistOpenLog();
+}
+
+function _toggleSet(exIdx, setIdx) {
+  if (!_openSessLog) return;
+  const s = _openSessLog.exercises[exIdx].sets[setIdx];
+  s.done = !s.done;
+  _persistOpenLog();
+  // Update just this row's visual state
+  const row = document.getElementById(`setrow_${exIdx}_${setIdx}`);
+  if (row) {
+    const box = row.querySelector(".set-check");
+    row.querySelectorAll("input").forEach(inp => {
+      inp.style.borderColor = s.done ? "var(--grn)" : "var(--bdr2)";
+      inp.style.background  = s.done ? "var(--grn-l)" : "var(--sur)";
+    });
+    if (box) {
+      box.style.background = s.done ? "var(--grn)" : "transparent";
+      box.style.borderColor = s.done ? "var(--grn)" : "var(--bdr2)";
+      box.innerHTML = s.done ? "<i class='ti ti-check' style='font-size:14px;color:#fff'></i>" : "";
+    }
+  }
+}
+
+function _persistOpenLog() {
+  if (!_openSessLog) return;
+  const { wk, sessId, exercises } = _openSessLog;
+  const arr = S.prog[wk] || [];
+  const i = arr.findIndex(s => s.id === sessId);
+  if (i < 0) return;
+  arr[i] = { ...arr[i], log: { ...(arr[i].log||{}), exercises } };
+  // Session counts as done when every set of every exercise is done
+  const allDone = exercises.length>0 && exercises.every(e => e.sets.length>0 && e.sets.every(s=>s.done));
+  if (allDone) arr[i].done = true;
+  S.prog[wk] = arr;
+  LS.s("prog", S.prog);
+  // Mirror each exercise's top completed weight into history
+  exercises.forEach(e => {
+    const done = e.sets.filter(s => s.done && +s.weight > 0);
+    if (done.length) recordMetric(e.name, Math.max(...done.map(s=>+s.weight)), S.weightUnit||"kg", wk);
+  });
+}
+
+// Build the session modal body (goal, warm-up, main set, cool-down, coach note)
+// from AI plan data `d`. Gym → editable set grid; non-gym → display chips.
+function buildSessionBody(d, sess, wk, col, isGym) {
+  const drillChecks = `_sessChecks_${sess.id}`;
+  if (!window[drillChecks]) window[drillChecks] = {};
+  return `
+      <div style="background:${col}12;border-left:3px solid ${col};border-radius:0 var(--rs) var(--rs) 0;padding:13px 16px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:${col};letter-spacing:.5px;margin-bottom:4px">Session goal</div>
+        <div style="font-size:14px;line-height:1.6">${d.goal||""}</div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:16px">🔥</span>
+          <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Warm-up</span>
+          <span style="font-size:11px;font-weight:700;color:var(--txt3);background:var(--sur2);padding:2px 8px;border-radius:20px">${d.warmup?.duration||"10 min"}</span>
+        </div>
+        ${(d.warmup?.steps||[]).map((s,i)=>`<div style="display:flex;gap:10px;padding:8px 0;${i<(d.warmup.steps.length-1)?"border-bottom:1px solid var(--bdr)":""}"><div style="width:22px;height:22px;border-radius:50%;background:var(--sur2);color:var(--txt2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${i+1}</div><div style="font-size:13px;line-height:1.5;padding-top:1px">${s}</div></div>`).join("")}
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:16px">💪</span>
+          <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Main set</span>
+          <span style="font-size:11px;font-weight:700;color:var(--txt3);background:var(--sur2);padding:2px 8px;border-radius:20px">${(d.mainSet||[]).length} exercises</span>
+          ${isGym?`<span style="font-size:10px;font-weight:700;color:var(--grn-d);background:var(--grn-l);padding:2px 8px;border-radius:20px;margin-left:auto">log your sets ↓</span>`:''}
+        </div>
+        ${(()=>{
+          if (isGym) {
+            _openSessLog = { wk, sessId: sess.id, exercises: [] };
+            return (d.mainSet||[]).map((ex,i)=>{
+              const built = _buildSetRows(sess, wk, ex);
+              _openSessLog.exercises.push({ name: ex.name, sets: built.rows });
+              const unit = S.weightUnit || "kg";
+              return `<div style="margin-bottom:12px;border-radius:14px;background:var(--sur2);border:1.5px solid var(--bdr);overflow:hidden">
+                <div style="padding:12px 14px 10px">
+                  <div style="font-size:15px;font-weight:800;line-height:1.3">${ex.name}</div>
+                  <div style="font-size:12px;color:var(--txt3);margin-top:3px">Target: ${ex.sets||"?"} × ${ex.reps||"?"}${ex.rest?" · rest "+ex.rest:""}${ex.cues?" · "+ex.cues:""}</div>
+                </div>
+                <div style="background:var(--sur);padding:2px 0">
+                  <div style="display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:7px;padding:5px 14px;font-size:10px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">
+                    <div>Set</div><div>Weight (${unit})</div><div>Reps</div><div></div>
+                  </div>
+                  ${built.rows.map((row,si)=>`
+                    <div id="setrow_${i}_${si}" style="display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:7px;padding:4px 14px;align-items:center">
+                      <div style="font-size:14px;font-weight:700;color:var(--txt2)">${si+1}</div>
+                      <input type="number" inputmode="decimal" value="${row.weight}" onchange="_setCell(${i},${si},'weight',this.value)" style="border:1px solid ${row.done?'var(--grn)':'var(--bdr2)'};background:${row.done?'var(--grn-l)':'var(--sur)'};color:var(--txt);border-radius:7px;padding:7px;font-size:14px;font-weight:700;text-align:center;width:100%;outline:none;font-family:inherit">
+                      <input type="number" inputmode="numeric" value="${row.reps}" onchange="_setCell(${i},${si},'reps',this.value)" style="border:1px solid ${row.done?'var(--grn)':'var(--bdr2)'};background:${row.done?'var(--grn-l)':'var(--sur)'};color:var(--txt);border-radius:7px;padding:7px;font-size:14px;font-weight:700;text-align:center;width:100%;outline:none;font-family:inherit">
+                      <div class="set-check" onclick="_toggleSet(${i},${si})" style="width:30px;height:30px;border-radius:7px;border:2px solid ${row.done?'var(--grn)':'var(--bdr2)'};background:${row.done?'var(--grn)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 auto">${row.done?"<i class='ti ti-check' style='font-size:14px;color:#fff'></i>":""}</div>
+                    </div>`).join("")}
+                </div>
+                ${built.lastTop?`<div style="padding:7px 14px;border-top:1px solid var(--bdr);font-size:12px;color:var(--txt3)">Last time: <span style="font-weight:700;color:var(--txt2)">${built.lastTop}${unit}</span></div>`:''}
+              </div>`;
+            }).join("");
+          }
+          _openSessLog = null;
+          return (d.mainSet||[]).map((ex,i)=>{
+            const ckId = `${drillChecks}_${i}`;
+            const done = window[drillChecks][i] || false;
+            const chips = [];
+            if (ex.sets) chips.push(["SETS", ex.sets]);
+            if (ex.reps) chips.push([/\d/.test(String(ex.reps))&&!/min|sec|s\b|m\b/i.test(String(ex.reps))?"REPS":"WORK", ex.reps]);
+            if (ex.rest) chips.push(["REST", ex.rest]);
+            return `<div id="${ckId}" style="margin-bottom:10px;border-radius:14px;background:${done?'var(--grn-l)':'var(--sur2)'};border:1.5px solid ${done?'var(--grn)':'var(--bdr)'};overflow:hidden;transition:all .2s">
+              <div style="display:flex;gap:12px;padding:14px 14px 12px;cursor:pointer"
+                onclick="window['${drillChecks}'][${i}]=!window['${drillChecks}'][${i}];const el=document.getElementById('${ckId}');const on=window['${drillChecks}'][${i}];el.style.background=on?'var(--grn-l)':'var(--sur2)';el.style.borderColor=on?'var(--grn)':'var(--bdr)';el.querySelector('.dc-box').style.background=on?'var(--grn)':'transparent';el.querySelector('.dc-box').innerHTML=on?'<i class=\\'ti ti-check\\' style=\\'font-size:14px;color:#fff\\'></i>':'';el.querySelector('.dc-name').style.textDecoration=on?'line-through':'none';el.querySelector('.dc-name').style.opacity=on?'.55':'1'">
+                <div class="dc-box" style="width:26px;height:26px;border-radius:8px;border:2px solid ${done?'var(--grn)':'var(--bdr2)'};background:${done?'var(--grn)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${done?"<i class='ti ti-check' style='font-size:14px;color:#fff'></i>":""}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="dc-name" style="font-size:15px;font-weight:800;line-height:1.3;${done?'text-decoration:line-through;opacity:.55':''}">${ex.name}</div>
+                  ${ex.cues?`<div style="font-size:12px;color:var(--txt3);margin-top:4px;line-height:1.45">${ex.cues}</div>`:''}
+                </div>
+              </div>
+              ${chips.length?`<div style="display:flex;gap:0;border-top:1px solid ${done?'var(--grn)':'var(--bdr)'}">
+                ${chips.map(([lbl,val],ci)=>`<div style="flex:1;text-align:center;padding:8px 4px;${ci<chips.length-1?`border-right:1px solid ${done?'var(--grn)':'var(--bdr)'}`:''}">
+                  <div style="font-size:17px;font-weight:900;letter-spacing:-.5px;line-height:1">${val}</div>
+                  <div style="font-size:9px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-top:3px">${lbl}</div>
+                </div>`).join("")}
+              </div>`:''}
+            </div>`;
+          }).join("");
+        })()}
+      </div>
+
+      <div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:16px">🧊</span>
+          <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Cool-down</span>
+          <span style="font-size:11px;font-weight:700;color:var(--txt3);background:var(--sur2);padding:2px 8px;border-radius:20px">${d.cooldown?.duration||"5 min"}</span>
+        </div>
+        ${(d.cooldown?.steps||[]).map(s=>`<div style="font-size:13px;padding:7px 0;border-bottom:1px solid var(--bdr);color:var(--txt2);line-height:1.5">${s}</div>`).join("")}
+      </div>
+
+      ${d.coachNote?`<div style="background:linear-gradient(135deg,${col}14,${col}08);border:1px solid ${col}30;border-radius:14px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px">
+        <i class="ti ti-bulb" style="color:${col};font-size:20px;margin-top:1px;flex-shrink:0"></i>
+        <div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:${col};margin-bottom:2px">Coach's focus</div><div style="font-size:14px;color:var(--txt);font-weight:600;line-height:1.5">${d.coachNote}</div></div>
+      </div>`:''}
+      ${_metricBox(sess, wk)}`;
+}
+
+// The "track a result" box — lets any session record one measurable number
+// (test score, throwing accuracy %, sprint time…) that feeds the Progress graphs.
+function _metricBox(sess, wk) {
+  const logged = sess.log?.metric ? sess.log : null;
+  const pur = "var(--pur)", purL = "var(--pur-l)", purD = "var(--pur-d)";
+
+  // Already recorded → show the result + improvement vs previous entry
+  if (logged) {
+    const hist = (S.perfHistory?.[logged.metric]||[]).filter(e=>e.wk<wk);
+    const prev = hist.length ? hist[hist.length-1] : null;
+    const delta = prev ? (+logged.value - +prev.value) : null;
+    const up = delta!=null && delta>0;
+    return `<div style="border-radius:14px;background:${purL};border:1.5px solid ${pur};padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+        <i class="ti ti-target-arrow" style="font-size:18px;color:${pur}"></i>
+        <div style="font-size:13px;font-weight:800;color:${purD}">${logged.metric}</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:26px;font-weight:900;letter-spacing:-.5px">${logged.value}</span>
+        <span style="font-size:13px;color:var(--txt2)">${logged.unit||""}</span>
+        ${delta!=null?`<span style="font-size:13px;font-weight:700;margin-left:auto;color:${up?'var(--grn)':'var(--red)'}">${up?'+':''}${(+delta).toFixed(1)} ${up?'↑':'↓'}</span>`:''}
+      </div>
+      <button class="btn btn-s" style="margin-top:10px;font-size:12px" onclick="_editMetric(${wk},'${sess.id}','${(logged.metric||'').replace(/'/g,"\\'")}','${logged.unit||''}')"><i class="ti ti-pencil"></i> Edit result</button>
+    </div>`;
+  }
+
+  // Not yet recorded → collapsed "track a result" control that expands to a form
+  const suggested = _suggestMetricName(sess);
+  return `<div id="metric-box-${sess.id}">
+    <button class="btn btn-s" style="width:100%;justify-content:center;border-style:dashed" onclick="_openMetricForm('${sess.id}','${suggested.name.replace(/'/g,"\\'")}','${suggested.unit}',${wk})">
+      <i class="ti ti-plus"></i> Track a result for this session
+    </button>
+  </div>`;
+}
+
+// Guess a sensible metric name/unit from the session type
+function _suggestMetricName(sess) {
+  const t = (sess.title||"").toLowerCase();
+  if (/beep|bronco|yo-?yo|test|1rm|max/.test(t)) return { name: sess.title, unit: "" };
+  if (/throw|huck|accuracy|disc/.test(t)) return { name: "Throwing accuracy", unit: "%" };
+  if (/sprint|40m|shuttle|time/.test(t)) return { name: sess.title, unit: "s" };
+  return { name: sess.title, unit: "" };
+}
+
+// Expand the inline form to enter a metric name, unit and value
+function _openMetricForm(sessId, name, unit, wk) {
+  const box = document.getElementById("metric-box-"+sessId);
+  if (!box) return;
+  box.innerHTML = `<div style="border-radius:14px;background:var(--pur-l);border:1.5px solid var(--pur);padding:14px 16px">
+    <div style="font-size:12px;font-weight:800;color:var(--pur-d);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Record a result</div>
+    <label class="lbl" style="font-size:11px">What are you measuring?</label>
+    <input id="metric-name-${sessId}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="e.g. Throwing accuracy" style="margin-bottom:10px">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label class="lbl" style="font-size:11px">Value</label>
+        <input id="metric-val-${sessId}" type="number" inputmode="decimal" placeholder="0" style="font-size:16px;font-weight:700"></div>
+      <div style="width:80px"><label class="lbl" style="font-size:11px">Unit</label>
+        <input id="metric-unit-${sessId}" type="text" value="${unit}" placeholder="%, s, kg" style="text-align:center"></div>
+    </div>
+    <div id="metric-err-${sessId}" style="display:none;font-size:12px;color:var(--red);margin-top:8px"></div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:12px" onclick="_submitMetric('${sessId}',${wk})"><i class="ti ti-check"></i> Save result</button>
+  </div>`;
+  const vi = document.getElementById("metric-val-"+sessId);
+  if (vi) vi.focus();
+}
+
+function _editMetric(wk, sessId, name, unit) {
+  const arr = S.prog[wk]||[]; const i = arr.findIndex(s=>s.id===sessId);
+  if (i>=0) { arr[i] = {...arr[i], log:{...(arr[i].log||{}), metric:null}}; S.prog[wk]=arr; }
+  // Re-render the modal so the form shows
+  showSessionDetail(wk, sessId);
+  setTimeout(()=>_openMetricForm(sessId, name, unit||"", wk), 60);
+}
+
+function _submitMetric(sessId, wk) {
+  const name = (document.getElementById("metric-name-"+sessId)?.value||"").trim();
+  const val  = document.getElementById("metric-val-"+sessId)?.value;
+  const unit = (document.getElementById("metric-unit-"+sessId)?.value||"").trim();
+  const err  = document.getElementById("metric-err-"+sessId);
+  if (!name) { if(err){err.textContent="Name what you're measuring first.";err.style.display="block";} return; }
+  if (val==="" || isNaN(+val)) { if(err){err.textContent="Enter a number for the result.";err.style.display="block";} return; }
+  saveMetricResult(wk, sessId, name, +val, unit);
+  toast("✓ "+name+" saved", "var(--grn)");
+  // Refresh modal to show the recorded state
+  showSessionDetail(wk, sessId);
+}
+
 async function showSessionDetail(wk, sessId) {
   const sess = (S.prog[wk] || []).find(s => s.id === sessId);
   if (!sess) return;
@@ -5389,9 +5827,20 @@ async function showSessionDetail(wk, sessId) {
     </div>`;
   }
 
-  // Show cached content immediately
-  if (cached) {
+  const isGym = sess.gym || sess.type === _G;
+
+  // Gym sessions must rebuild live (set values, prefill, _openSessLog wiring),
+  // so only use the cached HTML for non-gym sessions.
+  if (cached && !isGym) {
     renderSessModal(cached);
+    return;
+  }
+
+  // Gym: if we already have the AI plan data cached, rebuild the live grid
+  // from it (no AI re-call). buildSessionBody handles both gym and non-gym.
+  const cachedPlan = isGym ? LS.g("sessPlan_" + sess.id, null) : null;
+  if (cachedPlan) {
+    renderSessModal(buildSessionBody(cachedPlan, sess, wk, col, isGym));
     return;
   }
 
@@ -5399,25 +5848,25 @@ async function showSessionDetail(wk, sessId) {
   renderSessModal(`<div style="display:flex;align-items:center;gap:10px;padding:16px 0;color:var(--txt2)"><div class="spin spin-d"></div><span>AI is building your session plan…</span></div>`);
 
   // Generate rich drill plan via AI
-  const isGym = sess.gym || sess.type === _G;
   const prompt = `You are an elite ${S.sport} coach. Build a detailed session plan for:
 
 SESSION: "${sess.title}"
 SPORT: ${S.sport} | POSITION: ${S.position||"athlete"} | DURATION: ${sess.min} min | INTENSITY: ${sess.intensity}
 NOTES: ${sess.notes||"none"} | PHASE: ${guide?.title||"training"}
+${isGym && S.bodyweight ? `ATHLETE BODYWEIGHT: ${S.bodyweight} ${S.weightUnit}. For each lift, calculate a concrete starting weight in ${S.weightUnit} (round to nearest 2.5${S.weightUnit==="kg"?"kg":"lb"}) based on typical strength ratios for this lift and an intermediate athlete. Put that number in "targetWeight".` : ""}
 
 Return ONLY valid JSON:
 {
   "goal": "One sentence — what this session develops",
   "warmup": {"duration":"10min","steps":["step 1","step 2","step 3"]},
   "mainSet": [
-    {"name":"Drill/exercise name","sets":"3","reps":"10","rest":"60s","cues":"technique cue in 8 words"},
-    ... (4-6 exercises/drills with specific names${isGym?", weights guidance":""}${S.sport==="Ultimate Frisbee"?", disc drill names":""})
+    {"name":"Drill/exercise name","sets":"3","reps":"10","rest":"60s","cues":"technique cue in 8 words"${isGym?',"targetWeight":60':''}},
+    ... (4-6 exercises/drills with specific names${isGym?", each with a numeric targetWeight in "+S.weightUnit:""}${S.sport==="Ultimate Frisbee"?", disc drill names":""})
   ],
   "cooldown": {"duration":"5min","steps":["step 1","step 2"]},
   "coachNote": "One key focus point for today"
 }
-${isGym?"Include specific exercises (e.g. 'Trap bar deadlift', not 'lower body work'). Give weight guidance as % of bodyweight or RPE.":"Include named drills (e.g. 'Handler reset cuts 5v5', not just 'cutting practice')."}`;
+${isGym?`Include specific exercises (e.g. 'Trap bar deadlift', not 'lower body work'). ${S.bodyweight?`Give targetWeight as a real number in ${S.weightUnit}.`:"Give weight guidance as % of bodyweight or RPE in the cues."}`:"Include named drills (e.g. 'Handler reset cuts 5v5', not just 'cutting practice')."}`;
 
   try {
     const raw = await callAI(prompt);
@@ -5428,44 +5877,13 @@ ${isGym?"Include specific exercises (e.g. 'Trap bar deadlift', not 'lower body w
     const drillChecks = `_sessChecks_${sess.id}`;
     if (!window[drillChecks]) window[drillChecks] = {};
 
-    const html = `
-      <div style="background:${col}12;border-left:3px solid ${col};border-radius:0 var(--rs) var(--rs) 0;padding:11px 14px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:${col};letter-spacing:.4px;margin-bottom:3px">Session goal</div>
-        <div style="font-size:13px;line-height:1.6">${d.goal||""}</div>
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--txt2);letter-spacing:.5px;margin-bottom:8px">🔥 Warm-up (${d.warmup?.duration||"10 min"})</div>
-        ${(d.warmup?.steps||[]).map((s,i)=>`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr)"><div style="width:20px;height:20px;border-radius:50%;background:var(--sur2);color:var(--txt2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0">${i+1}</div><div style="font-size:13px">${s}</div></div>`).join("")}
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--txt2);letter-spacing:.5px;margin-bottom:8px">💪 Main set</div>
-        ${(d.mainSet||[]).map((ex,i)=>{
-          const ckId = `${drillChecks}_${i}`;
-          const done = window[drillChecks][i] || false;
-          return `<div id="${ckId}" style="display:flex;gap:10px;padding:10px;margin-bottom:8px;border-radius:var(--rs);background:${done?'var(--grn-l)':'var(--sur2)'};border:1px solid ${done?'var(--grn)':'var(--bdr)'};cursor:pointer;transition:all .2s"
-            onclick="window['${drillChecks}'][${i}]=!window['${drillChecks}'][${i}];const el=document.getElementById('${ckId}');el.style.background=window['${drillChecks}'][${i}]?'var(--grn-l)':'var(--sur2)';el.style.borderColor=window['${drillChecks}'][${i}]?'var(--grn)':'var(--bdr)';el.querySelector('.drill-check').style.color=window['${drillChecks}'][${i}]?'var(--grn)':'var(--txt3)'">
-            <div class="drill-check" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--bdr);background:${done?'var(--grn)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${done?'var(--grn)':'var(--txt3)'}">
-              ${done?`<i class="ti ti-check" style="font-size:12px;color:#fff"></i>`:`<i class="ti ti-circle" style="font-size:12px"></i>`}
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:700;${done?'text-decoration:line-through;opacity:.6':''}">${ex.name}</div>
-              <div style="font-size:12px;color:var(--txt2);margin-top:2px">${[ex.sets&&ex.sets+'×',ex.reps,ex.rest&&'rest '+ex.rest].filter(Boolean).join(' · ')}</div>
-              ${ex.cues?`<div style="font-size:11px;color:var(--txt3);margin-top:3px;font-style:italic">${ex.cues}</div>`:''}
-            </div>
-          </div>`;
-        }).join("")}
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--txt2);letter-spacing:.5px;margin-bottom:8px">🧊 Cool-down (${d.cooldown?.duration||"5 min"})</div>
-        ${(d.cooldown?.steps||[]).map(s=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--bdr);color:var(--txt2)">${s}</div>`).join("")}
-      </div>
-      ${d.coachNote?`<div style="background:var(--acc-l);border-radius:var(--rs);padding:11px 14px;display:flex;gap:8px;align-items:flex-start">
-        <i class="ti ti-bulb" style="color:var(--acc);font-size:16px;margin-top:1px;flex-shrink:0"></i>
-        <div style="font-size:13px;color:var(--txt);font-weight:600">${d.coachNote}</div>
-      </div>`:''}`;
+    const html = buildSessionBody(d, sess, wk, col, isGym);
 
     renderSessModal(html);
-    LS.s(cacheKey, html);
+    // Cache the AI plan DATA (not HTML) so gym sessions rebuild the live set grid
+    // on reopen without another AI call. Non-gym can cache either way.
+    LS.s("sessPlan_" + sess.id, d);
+    if (!isGym) LS.s(cacheKey, html);
   } catch(e) {
     // Fallback to SESS_GUIDANCE
     const guide2 = SESS_GUIDANCE[sess.type] || SESS_GUIDANCE[_C];
