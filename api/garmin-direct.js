@@ -169,27 +169,33 @@ module.exports = async (req, res) => {
     for (const w of workouts) {
       try {
         const payload = buildWorkout(w);
-        const created = await gc.createWorkout(payload);
-        const workoutIdCreated = created?.workoutId ?? created?.id ?? null;
+        // garmin-connect 1.6.x has no createWorkout(). Post the raw payload
+        // through whichever authenticated path the installed version exposes.
+        let created = null;
+        if (typeof gc.createWorkout === 'function') {
+          created = await gc.createWorkout(payload);
+        } else if (gc.client && typeof gc.client.post === 'function') {
+          created = await gc.client.post('/workout-service/workout', payload);
+        } else if (typeof gc.addWorkout === 'function') {
+          created = await gc.addWorkout(payload);
+        } else {
+          throw new Error('No workout-create method in installed garmin-connect');
+        }
+        const workoutIdCreated = created?.workoutId ?? created?.id ?? created?.data?.workoutId ?? null;
 
         let scheduled = false;
         if (workoutIdCreated && w.date) {
           try {
-            // Try both common method signatures
             if (typeof gc.scheduleWorkout === 'function') {
               await gc.scheduleWorkout(workoutIdCreated, w.date);
-            } else {
-              // Fallback: direct API call via the internal client
-              await gc.client?.get(
-                `/workout-service/schedule/${workoutIdCreated}`,
-                { date: w.date }
-              );
+            } else if (gc.client && typeof gc.client.post === 'function') {
+              await gc.client.post(`/workout-service/schedule/${workoutIdCreated}`, { date: w.date });
             }
             scheduled = true;
-          } catch { /* scheduling optional */ }
+          } catch { /* scheduling optional — workout still saved to library */ }
         }
 
-        results.push({ sessId: w.sessId, workoutId: workoutIdCreated, scheduled, success: true });
+        results.push({ sessId: w.sessId, workoutId: workoutIdCreated, scheduled, success: !!workoutIdCreated });
       } catch (e) {
         results.push({ sessId: w.sessId, success: false, error: e.message });
       }
