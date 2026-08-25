@@ -2182,6 +2182,10 @@ function _setSyncStatus(state) {
 
 // Manual cloud sync — pulls latest data from Firestore on demand
 async function forceSyncNow() {
+  // If we're in an error state, surface the actual reason so it can be diagnosed
+  if (window._lastSyncError) {
+    toast("Sync issue: " + window._lastSyncError, "var(--amb)", 5000);
+  }
   if (!_firebaseReady) {
     toast("Cloud not connected yet — check your internet and try again", "var(--amb)");
     return;
@@ -2208,6 +2212,9 @@ const _writeNow = new Set(["prog", "vitSched", "sleepLog", "testLog", "weekLog",
 
 async function _syncToFirestore(k, v) {
   if (!_firebaseReady || _noSync.has(k)) return;
+  // Never sync large, locally-derivable cache blobs (rendered HTML, AI explanations).
+  // They can exceed Firestore limits and don't need to live in the cloud.
+  if (/^(sessExplain_|sessPlan_|profileCache_|explainCache_)/.test(k)) return;
   const ns = window._userKey || window._uid;
   if (!ns) return;
 
@@ -2229,19 +2236,29 @@ async function _syncToFirestore(k, v) {
   };
 }
 
-async function _doFirestoreWrite(k, v, ns) {
+async function _doFirestoreWrite(k, v, ns, _retry) {
   const safeK = String(k).replace(/[/.]/g, "_").substring(0, 100);
   _setSyncStatus("syncing");
   try {
     // Firestore rejects undefined — coerce it to null so the write never fails
     const val = v === undefined ? null : v;
-    const payload = (typeof val === "object" && val !== null)
+    let payload = (typeof val === "object" && val !== null)
       ? { _json: true, v: JSON.stringify(val) }
       : { v: val === undefined ? null : val };
+    // Firestore rejects docs >1MB — skip oversized values rather than erroring the whole sync
+    if (payload._json && payload.v.length > 900000) {
+      console.warn("Skipping oversized sync value for key:", k, "(", payload.v.length, "bytes)");
+      _setSyncStatus("synced");
+      return;
+    }
     await window._db.collection("users").doc(ns).collection("data").doc(safeK).set(payload);
+    window._lastSyncError = null;
     _setSyncStatus("synced");
   } catch(e) {
-    console.warn("Firestore sync error:", e.message);
+    window._lastSyncError = (e && e.message) || String(e);
+    console.warn("Firestore sync error on key '"+k+"':", window._lastSyncError);
+    // Retry a transient failure once after a short delay before showing the error
+    if (!_retry) { setTimeout(() => _doFirestoreWrite(k, v, ns, true), 1500); return; }
     _setSyncStatus("offline");
   }
 }
@@ -5029,9 +5046,8 @@ Be extremely specific: exact cone distances, exact repetition counts, exact timi
         </div>`).join("")}
       </div>`;
     renderModal(html);
-    // Cache so next open is instant
+    // Cache so next open is instant (local only — not synced, it's re-derivable)
     LS.s(cacheKey, html);
-    _syncToFirestore(cacheKey, html);
   } catch(e) {
     renderModal(`<div style="color:var(--txt2);font-size:13px;padding:8px 0">Could not load AI explanation — ${e.message==="NO_KEY"?"add API key in Settings":e.message}.</div>`);
   }
@@ -5229,6 +5245,42 @@ function _persistOpenLog() {
 
 // Build the session modal body (goal, warm-up, main set, cool-down, coach note)
 // from AI plan data `d`. Gym → editable set grid; non-gym → display chips.
+// Toggle a warm-up / cool-down step's done state (persists in the session log)
+function _wcToggle(wk, sessId, phase, i) {
+  const arr = S.prog[wk] || [];
+  const idx = arr.findIndex(s => s.id === sessId);
+  if (idx < 0) return;
+  const sess = arr[idx];
+  if (!sess.log) sess.log = {};
+  const key = phase === "warmup" ? "warmupDone" : "cooldownDone";
+  if (!sess.log[key]) sess.log[key] = {};
+  sess.log[key][i] = !sess.log[key][i];
+  S.prog[wk] = arr;
+  LS.s("prog", S.prog);
+  // Update just this row visually
+  const row = document.getElementById(`wc_${phase}_${i}`);
+  if (row) {
+    const on = sess.log[key][i];
+    const box = row.querySelector(".wc-box");
+    const txt = row.querySelector(".wc-txt");
+    if (box) { box.style.background = on ? "var(--grn)" : "transparent"; box.style.borderColor = on ? "var(--grn)" : "var(--bdr2)"; box.innerHTML = on ? "<i class='ti ti-check' style='font-size:12px;color:#fff'></i>" : ""; }
+    if (txt) { txt.style.textDecoration = on ? "line-through" : "none"; txt.style.opacity = on ? ".55" : "1"; }
+  }
+}
+
+// Render a checkable step list for warm-up / cool-down
+function _wcSteps(sess, wk, phase, steps) {
+  const key = phase === "warmup" ? "warmupDone" : "cooldownDone";
+  const done = sess.log?.[key] || {};
+  return steps.map((s,i)=>{
+    const on = done[i];
+    return `<div id="wc_${phase}_${i}" onclick="_wcToggle(${wk},'${sess.id}','${phase}',${i})" style="display:flex;gap:11px;padding:9px 0;align-items:flex-start;cursor:pointer;${i<steps.length-1?"border-bottom:1px solid var(--bdr)":""}">
+      <div class="wc-box" style="width:22px;height:22px;border-radius:7px;border:2px solid ${on?'var(--grn)':'var(--bdr2)'};background:${on?'var(--grn)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${on?"<i class='ti ti-check' style='font-size:12px;color:#fff'></i>":""}</div>
+      <div class="wc-txt" style="font-size:13px;line-height:1.5;padding-top:2px;${on?'text-decoration:line-through;opacity:.55':''}">${s}</div>
+    </div>`;
+  }).join("");
+}
+
 function buildSessionBody(d, sess, wk, col, isGym) {
   const drillChecks = `_sessChecks_${sess.id}`;
   if (!window[drillChecks]) window[drillChecks] = {};
@@ -5244,7 +5296,7 @@ function buildSessionBody(d, sess, wk, col, isGym) {
           <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Warm-up</span>
           <span style="font-size:11px;font-weight:700;color:var(--txt3);background:var(--sur2);padding:2px 8px;border-radius:20px">${d.warmup?.duration||"10 min"}</span>
         </div>
-        ${(d.warmup?.steps||[]).map((s,i)=>`<div style="display:flex;gap:10px;padding:8px 0;${i<(d.warmup.steps.length-1)?"border-bottom:1px solid var(--bdr)":""}"><div style="width:22px;height:22px;border-radius:50%;background:var(--sur2);color:var(--txt2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${i+1}</div><div style="font-size:13px;line-height:1.5;padding-top:1px">${s}</div></div>`).join("")}
+        ${_wcSteps(sess, wk, "warmup", d.warmup?.steps||[])}
       </div>
 
       <div style="margin-bottom:20px">
@@ -5316,7 +5368,7 @@ function buildSessionBody(d, sess, wk, col, isGym) {
           <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px">Cool-down</span>
           <span style="font-size:11px;font-weight:700;color:var(--txt3);background:var(--sur2);padding:2px 8px;border-radius:20px">${d.cooldown?.duration||"5 min"}</span>
         </div>
-        ${(d.cooldown?.steps||[]).map(s=>`<div style="font-size:13px;padding:7px 0;border-bottom:1px solid var(--bdr);color:var(--txt2);line-height:1.5">${s}</div>`).join("")}
+        ${_wcSteps(sess, wk, "cooldown", d.cooldown?.steps||[])}
       </div>
 
       ${d.coachNote?`<div style="background:linear-gradient(135deg,${col}14,${col}08);border:1px solid ${col}30;border-radius:14px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px">
