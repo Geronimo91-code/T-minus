@@ -968,45 +968,16 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
   <div id="garmin-training-row"></div>
   <div id="sess-list" style="display:flex;flex-direction:column;gap:7px"></div>
   <div class="card"><div class="cp">
-    <div class="ctitle" style="margin-bottom:3px">My training schedule</div>
-    <div class="csub" style="margin-bottom:12px">Tell AI which days you're free and what you have access to</div>
-    <div class="day-grid" id="day-grid"></div>
-  </div></div>
-  <div class="card"><div class="cp">
-    <div class="ctitle" style="margin-bottom:3px">Plan this week</div>
-    <div class="csub" style="margin-bottom:12px">Pick how to build your sessions. <strong>Template</strong> is instant &amp; works offline. <strong>AI plan</strong> is custom-built for your schedule (needs internet).</div>
-    <div style="display:flex;gap:0;border:1.5px solid var(--bdr);border-radius:var(--rs);overflow:hidden;margin-bottom:12px" id="plan-mode-toggle">
-      <button id="mode-btn-default" onclick="setPlanMode('default')"
-        style="flex:1;padding:9px 0;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:none;transition:all .15s">
-        <i class="ti ti-list" style="font-size:13px"></i> Template
-      </button>
-      <button id="mode-btn-ai" onclick="setPlanMode('ai')"
-        style="flex:1;padding:9px 0;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border:none;border-left:1.5px solid var(--bdr);transition:all .15s">
-        <i class="ti ti-sparkles" style="font-size:13px"></i> AI plan
-      </button>
-    </div>
-    <div id="plan-mode-action"></div>
-    <button class="btn btn-p" style="margin-top:8px;width:100%;justify-content:center" onclick="startGuidedPlan()"><i class="ti ti-calendar-plus"></i> Plan this week (tap to build)</button>
+    <div class="ctitle" style="margin-bottom:3px">Build your plan</div>
+    <div class="csub" style="margin-bottom:14px">Tap to set up this week around your team days, or generate your whole program.</div>
+    <button class="btn btn-p" style="width:100%;justify-content:center" onclick="startGuidedPlan()"><i class="ti ti-calendar-plus"></i> Plan this week (tap to build)</button>
     <div style="display:none" id="adj-btn-wrap">
-      <button class="btn btn-s" id="adj-btn" onclick="genAI(true)" style="margin-top:8px"><i class="ti ti-brain"></i> Adjust to my progress</button>
+      <button class="btn btn-s" id="adj-btn" onclick="genAI(true)" style="margin-top:8px;width:100%;justify-content:center"><i class="ti ti-brain"></i> Adjust to my progress</button>
     </div>
-    <button class="btn btn-s" style="margin-top:8px" onclick="togTeamForm()"><i class="ti ti-users"></i> Team practice</button>
-    <button id="gen-all-btn" class="btn btn-s" style="margin-top:6px;width:100%;justify-content:center;font-size:12px" onclick="genAllWeeks()" title="Generate AI plan for every remaining week in your program">
+    <button id="gen-all-btn" class="btn btn-s" style="margin-top:8px;width:100%;justify-content:center;font-size:13px" onclick="startFullProgramPlan()">
       <i class="ti ti-player-skip-forward"></i> Generate full program (all weeks)
     </button>
     <div id="plan-retry" style="display:none;margin-top:10px"></div>
-    <div id="team-form" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)">
-      <label class="lbl">Add team practice</label>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
-        <select id="t-day"><option>Mon</option><option>Tue</option><option selected>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option><option>Sun</option></select>
-        <input type="time" id="t-time" value="18:00" style="font-size:14px;font-weight:700;font-family:inherit;border:1px solid var(--bdr2);border-radius:var(--rx);padding:8px 11px;background:var(--sur2);color:var(--txt);outline:none;width:125px">
-      </div>
-      <input type="text" id="t-notes" placeholder="Session focus (optional)" style="margin-bottom:9px">
-      <div class="btn-row">
-        <button class="btn btn-p btn-s" onclick="addTeam()">Add</button>
-        <button class="btn btn-s" onclick="togTeamForm()">Cancel</button>
-      </div>
-    </div>
     <div id="plan-err" style="display:none;margin-top:10px"></div>
   </div></div>
 </section>
@@ -1040,18 +1011,18 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 
   <!-- Meal timing card -->
   <div class="card"><div class="cp">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div><div class="ctitle">Meal timing</div><div class="csub">Around today's sessions</div></div>
-      <div style="font-size:20px">⏰</div>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--amb-l);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-clock-hour-4" style="font-size:20px;color:var(--amb)"></i></div>
+      <div><div class="ctitle" style="margin-bottom:0">Meal timing</div><div class="csub">Around today's sessions</div></div>
     </div>
     <div id="fuel-timing"></div>
   </div></div>
 
   <!-- AI meal ideas card -->
   <div class="card"><div class="cp">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div><div class="ctitle">Meal ideas</div><div class="csub">Quick AI suggestions for right now</div></div>
-      <div style="font-size:20px">🍽️</div>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--grn-l);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-tools-kitchen-2" style="font-size:20px;color:var(--grn)"></i></div>
+      <div><div class="ctitle" style="margin-bottom:0">Meal ideas</div><div class="csub">Quick AI suggestions for right now</div></div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
       <button class="btn btn-s" onclick="askMealIdeas('pre-training')"><i class="ti ti-bolt"></i> Pre-training</button>
@@ -1064,9 +1035,9 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 
   <!-- Pre-event plan card (visible in taper phase only) -->
   <div class="card" id="fuel-event-card" style="display:none"><div class="cp">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div><div class="ctitle">Pre-event nutrition plan</div><div class="csub" id="fuel-event-sub">Specific day-by-day eating for peak performance</div></div>
-      <div style="font-size:22px">🏆</div>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--acc-l,var(--blu-l));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-trophy" style="font-size:20px;color:var(--acc)"></i></div>
+      <div><div class="ctitle" style="margin-bottom:0">Pre-event nutrition plan</div><div class="csub" id="fuel-event-sub">Specific day-by-day eating for peak performance</div></div>
     </div>
     <button class="btn btn-p" id="fuel-event-btn" onclick="generateEventPlan()"><i class="ti ti-brain"></i> Generate my event plan</button>
     <div id="fuel-event-out" style="margin-top:12px"></div>
@@ -4112,7 +4083,7 @@ function renderWeekSummary() {
 
   q("week-summary").innerHTML=`
     <div>
-      <div class="sum-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:9px;background:var(--pur-l);display:flex;align-items:center;justify-content:center;color:var(--pur)"><i class="ti ti-moon" style="font-size:15px"></i></div><div style="font-size:14px;font-weight:600">Sleep target</div></div><div style="font-size:14px;font-weight:700;color:${sleepCol}">${sh}h${smin>0?" "+smin+"m":""}</div></div>
+      <div class="sum-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:9px;background:var(--pur-l);display:flex;align-items:center;justify-content:center;color:var(--pur)"><i class="ti ti-moon" style="font-size:15px"></i></div><div style="font-size:14px;font-weight:600">Sleep</div></div><div style="font-size:14px;font-weight:700;color:${sleepCol}">${sh}h${smin>0?" "+smin+"m":""}</div></div>
       <div class="sum-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:9px;background:var(--grn-l);display:flex;align-items:center;justify-content:center;color:var(--grn)"><i class="ti ti-run" style="font-size:15px"></i></div><div style="font-size:14px;font-weight:600">Sessions</div></div><div style="font-size:14px;font-weight:700;color:${sessCol}">${sessDone}/${sessTotal}</div></div>
       ${avgRPE!==null?`<div class="sum-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:9px;background:var(--amb-l);display:flex;align-items:center;justify-content:center;color:var(--amb)"><i class="ti ti-activity" style="font-size:15px"></i></div><div style="font-size:14px;font-weight:600">Avg RPE this week</div></div><div style="font-size:14px;font-weight:700;color:var(--amb)">${avgRPE}/10</div></div>`:""}
       <div class="sum-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:9px;background:var(--blu-l);display:flex;align-items:center;justify-content:center;color:var(--blu)"><i class="ti ti-droplet" style="font-size:15px"></i></div><div style="font-size:14px;font-weight:600">Water today</div></div><div style="font-size:14px;font-weight:700;color:var(--blu)">${fmt(S.wLitres)}L</div></div>
@@ -4164,12 +4135,9 @@ function renderTestCards() {
   q("test-cards").innerHTML=S.tests.map(t=>{
     const entries=S.testLog.filter(e=>e.testId===t.id).sort((a,b)=>new Date(a.date)-new Date(b.date));
     const latest=entries[entries.length-1],prev=entries[entries.length-2];
-    let trend="";
-    if(latest&&prev){
-      const imp=t.lowerBetter?(+latest.value<+prev.value):(+latest.value>+prev.value);
-      trend=`<span style="color:${imp?"var(--grn)":"var(--red)"};font-size:11px;font-weight:700">${imp?"▲ improved":"▼ declined"}</span>`;
-    }
-    const chart = makeSVGChart(entries, t.target, t.lowerBetter, t.unit);
+    const impBadge = (latest&&prev)
+      ? `<span style="color:${(t.lowerBetter?(+latest.value<+prev.value):(+latest.value>+prev.value))?"var(--grn)":"var(--red)"};font-size:11px;font-weight:700">${(t.lowerBetter?(+latest.value<+prev.value):(+latest.value>+prev.value))?"▲ improved":"▼ declined"}</span>`
+      : "";
     return `<div class="test-card" onclick="showTestDetail('${t.id}')" style="cursor:pointer;transition:transform .15s" onmouseenter="this.style.transform='scale(1.01)'" onmouseleave="this.style.transform='scale(1)'">
       <div class="test-hdr">
         <div class="test-ic" style="background:var(--grn-l);color:var(--grn)"><i class="ti ${t.icon}"></i></div>
@@ -4177,11 +4145,9 @@ function renderTestCards() {
         ${latest?`<div style="text-align:right;flex-shrink:0"><div style="font-size:20px;font-weight:900;letter-spacing:-1px">${latest.value}<span style="font-size:11px;font-weight:600;color:var(--txt2);margin-left:2px">${t.unit}</span></div><div style="font-size:10px;color:var(--txt3)">${latest.date}</div></div>`:`<div style="font-size:12px;color:var(--txt3)">no data</div>`}
       </div>
       <div class="test-body">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div style="font-size:11px;color:var(--txt2)">Target: <strong>${t.target} ${t.unit}</strong></div>${trend}
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:11px;color:var(--txt2)">Target: <strong>${t.target} ${t.unit}</strong>${entries.length?` · ${entries.length} logged`:""}</div>${impBadge}
         </div>
-        ${chart || (entries.length < 2 && entries.length > 0 ? `<div style="font-size:11px;color:var(--txt3);margin-top:4px">Log one more result to see your trend chart</div>` : "")}
-        ${entries.length?`<div style="font-size:11px;color:var(--txt3);margin-top:4px">${entries.length} result${entries.length>1?"s":""} logged</div>`:""}
       </div>
     </div>`;
   }).join("");
@@ -4654,8 +4620,10 @@ function saveSleep(){
 
 // ─── TRAINING SCHEDULE ───────────────────────────────────
 function renderDayGrid() {
+  const grid = q("day-grid");
+  if (!grid) return;  // schedule section removed
   if (!S.sched) S.sched = Object.assign({}, DEFAULT_SCHED);
-  q("day-grid").innerHTML=DAYS.map(day=>{
+  grid.innerHTML=DAYS.map(day=>{
     const ds=(S.sched||DEFAULT_SCHED)[day]||{on:false,slots:[],gym:false};
     const hasMorn=ds.slots.includes("morning"),hasEve=ds.slots.includes("evening");
     const dis=!ds.on?"disabled":"";
@@ -4805,9 +4773,8 @@ function renderTraining() {
   }).join("");
   }
   const totalDone=Object.values(S.prog).flat().filter(s=>s.done).length;
-  q("adj-btn").style.display=totalDone>0?"inline-flex":"none";
-  applyPlanMode(LS.g("planMode","default"));
-  renderDayGrid();
+  const adjBtn=q("adj-btn"); if(adjBtn) adjBtn.style.display=totalDone>0?"inline-flex":"none";
+  const adjWrap=q("adj-btn-wrap"); if(adjWrap) adjWrap.style.display=totalDone>0?"block":"none";
   renderAgenda();
   if (typeof renderGarminTrainingRow === "function") renderGarminTrainingRow();
 }
@@ -4817,7 +4784,7 @@ function jumpPhase(w){ S.vwk=w;renderTraining();renderDash(); }
 function delSess(wk,id){ S.prog[wk]=(S.prog[wk]||[]).filter(s=>s.id!==id);LS.s("prog",S.prog);renderTraining(); }
 
 let teamOpen=false;
-function togTeamForm(){ teamOpen=!teamOpen;q("team-form").style.display=teamOpen?"block":"none"; }
+function togTeamForm(){ const f=q("team-form"); if(!f) return; teamOpen=!teamOpen;f.style.display=teamOpen?"block":"none"; }
 function addTeam(){
   const id="tm_"+Date.now();
   const s={id,d:q("t-day").value,time:q("t-time").value,min:90,type:"team",
@@ -5057,10 +5024,14 @@ async function genAllWeeks() {
 // ─── AI PLAN ─────────────────────────────────────────────
 // ─── GUIDED AI PLANNING (conversational intake before generating) ───
 // ─── GUIDED PLANNING (tap-to-select form) ───
-let _planForm = null; // { teamDays:Set, counts:{gym,throwing,conditioning}, test:bool }
+let _planForm = null; // { teamDays:Set, counts:{gym,throwing,conditioning}, test:bool, allWeeks:bool }
 
-function startGuidedPlan() {
-  _planForm = { teamDays: new Set(), counts: { gym:2, throwing:1, conditioning:1 }, test:false };
+function startFullProgramPlan() {
+  startGuidedPlan(true);
+}
+
+function startGuidedPlan(allWeeks=false) {
+  _planForm = { teamDays: new Set(), counts: { gym:2, throwing:1, conditioning:1 }, test:false, allWeeks };
   // Pre-select any team days already logged this week
   ((S.prog[S.vwk]||[]).filter(s=>s.isTeam)).forEach(s=> _planForm.teamDays.add(s.d));
 
@@ -5088,7 +5059,7 @@ function startGuidedPlan() {
     <div style="background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.4)">
       <div style="display:flex;align-items:center;gap:11px;padding:18px 18px 14px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--sur)">
         <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-calendar-plus" style="font-size:20px;color:#fff"></i></div>
-        <div style="flex:1"><div style="font-size:16px;font-weight:800">Plan week ${S.vwk}</div><div style="font-size:12px;color:var(--txt2)">${phase.n||"Training"} phase · tap to build your week</div></div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800">${_planForm.allWeeks?"Plan full program":"Plan week "+S.vwk}</div><div style="font-size:12px;color:var(--txt2)">${_planForm.allWeeks?"applies to every remaining week":(phase.n||"Training")+" phase · tap to build your week"}</div></div>
         <button onclick="closePlan()" style="border:none;background:var(--sur2);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;color:var(--txt2)">×</button>
       </div>
       <div style="padding:18px">
@@ -5113,7 +5084,7 @@ function startGuidedPlan() {
           <div style="font-size:12px;color:var(--txt2);line-height:1.5">Rest days fill in automatically. Sessions are placed around your team days, avoiding back-to-back hard days.</div>
         </div>
 
-        <button class="btn btn-p" id="plan-gen-btn" style="width:100%;justify-content:center" onclick="generateFromPlan()"><i class="ti ti-sparkles"></i> Build my week ${S.vwk} plan</button>
+        <button class="btn btn-p" id="plan-gen-btn" style="width:100%;justify-content:center" onclick="generateFromPlan()"><i class="ti ti-sparkles"></i> ${_planForm.allWeeks?"Build full program":"Build my week "+S.vwk+" plan"}</button>
         <div id="plan-err" style="display:none;margin-top:10px"></div>
       </div>
     </div>`;
@@ -5146,24 +5117,21 @@ function _planTest() {
   if (t) t.className = "tgl " + (_planForm.test ? "on" : "off");
 }
 
-async function generateFromPlan() {
-  if (!_planForm) return;
-  const btn = q("plan-gen-btn");
-  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Building your week…'; }
-
-  const p = phaseOf(S.vwk) || buildDefaultPhases()[0];
-  const teams = (S.prog[S.vwk]||[]).filter(s=>s.isTeam);
+// Build the prompt + generate one week's plan from the current _planForm choices
+async function _genWeekFromForm(wk) {
+  const p = phaseOf(wk) || buildDefaultPhases()[0];
+  const teams = (S.prog[wk]||[]).filter(s=>s.isTeam);
   const c = _planForm.counts;
   const teamDays = [..._planForm.teamDays];
 
   const prompt =
-`Elite ${S.sport} coach. Generate the Week ${S.vwk}/${getTotalWk()} training plan from these exact choices.
+`Elite ${S.sport} coach. Generate the Week ${wk}/${getTotalWk()} training plan from these exact choices.
 
 EVENT: ${S.eventName} — ${daysToEvent()} days away.
 SPORT: ${S.sport}. POSITION: ${S.position||"general athlete"}.
 PHASE: ${p.n} — ${p.dim}.
 
-ATHLETE'S CHOICES FOR THIS WEEK:
+ATHLETE'S CHOICES:
 - Team practice days: ${teamDays.length?teamDays.join(", "):"none"}
 - Gym / strength sessions: ${c.gym}
 - Throwing sessions: ${c.throwing}
@@ -5175,7 +5143,7 @@ ${teams.length?`Existing team practices already logged (keep, don't duplicate): 
 Create exactly the number of each session type requested. Place them across the week around the team days, with at least one rest/recovery day and no back-to-back high/max days.
 
 Return ONLY valid JSON — no markdown:
-{"theme":"weekly focus 6-8 words","sessions":[{"id":"w${S.vwk}s1","d":"Mon","time":"06:30","min":60,"type":"gym","title":"Session title","notes":"specific focus 10-14 words","intensity":"medium","gym":true${_planForm.test?',"isTest":false':''}}]}
+{"theme":"weekly focus 6-8 words","sessions":[{"id":"w${wk}s1","d":"Mon","time":"06:30","min":60,"type":"gym","title":"Session title","notes":"specific focus 10-14 words","intensity":"medium","gym":true${_planForm.test?',"isTest":false':''}}]}
 
 RULES:
 - d: Mon Tue Wed Thu Fri Sat Sun. type: conditioning|skills|team|recovery|rest|gym. intensity: low|medium|high|max|rest.
@@ -5183,25 +5151,47 @@ RULES:
 ${_planForm.test?'- Mark the fitness-test session with "isTest":true and give it type "conditioning" or "skills" as fits the test.':''}
 - Respect the requested counts exactly.`;
 
+  const txt = await callAI(prompt);
+  const jsonStr = txt.match(/\{[\s\S]*\}/)?.[0];
+  if (!jsonStr) throw new Error("No JSON returned");
+  const parsed = JSON.parse(jsonStr);
+  if (!parsed.sessions?.length) throw new Error("No sessions in response");
+  if (!S.prog) S.prog = {};
+  const existTeams = ((S.prog||{})[wk]||[]).filter(s=>s.isTeam);
+  S.prog[wk] = [
+    ...parsed.sessions.map(s=>({...s, done:false, theme:parsed.theme||"", rpe:null})),
+    ...existTeams,
+  ];
+  sortWk(wk);
+}
+
+async function generateFromPlan() {
+  if (!_planForm) return;
+  const btn = q("plan-gen-btn");
+  const allWeeks = _planForm.allWeeks;
+
   try {
-    const txt = await callAI(prompt);
-    const jsonStr = txt.match(/\{[\s\S]*\}/)?.[0];
-    if (!jsonStr) throw new Error("No JSON returned");
-    const parsed = JSON.parse(jsonStr);
-    if (parsed.sessions?.length) {
-      if (!S.prog) S.prog = {};
-      const existTeams = ((S.prog||{})[S.vwk]||[]).filter(s=>s.isTeam);
-      S.prog[S.vwk] = [
-        ...parsed.sessions.map(s=>({...s, done:false, theme:parsed.theme||"", rpe:null})),
-        ...existTeams,
-      ];
-      sortWk(S.vwk); LS.s("prog", S.prog);
+    if (allWeeks) {
+      const total = getTotalWk();
+      const start = curWk();
+      for (let wk = start; wk <= total; wk++) {
+        if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spin"></div> Building week ${wk} of ${total}…`; }
+        await _genWeekFromForm(wk);
+        LS.s("prog", S.prog);
+      }
+      closePlan();
+      renderTraining(); renderDash();
+      toast("✓ Full program created", "var(--grn)");
+    } else {
+      if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spin"></div> Building your week…'; }
+      await _genWeekFromForm(S.vwk);
+      LS.s("prog", S.prog);
       closePlan();
       renderTraining(); renderDash();
       toast("✓ Week "+S.vwk+" plan created", "var(--grn)");
-    } else throw new Error("No sessions in response");
+    }
   } catch(e) {
-    if (btn) { btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> Build my week '+S.vwk+' plan'; }
+    if (btn) { btn.disabled=false; btn.innerHTML='<i class="ti ti-sparkles"></i> '+(allWeeks?"Build full program":"Build my week "+S.vwk+" plan"); }
     const errEl = q("plan-err");
     if (errEl) { errEl.style.display="block"; errEl.innerHTML=`<div style="font-size:13px;color:var(--red);padding:8px 0">Couldn't generate: ${e.message}. Try again.</div>`; }
   }
@@ -5805,24 +5795,27 @@ async function showSessionDetail(wk, sessId) {
 
   function renderSessModal(bodyHtml) {
     modal.style.display = "flex";
-    modal.innerHTML = `<div id="sess-modal-inner" style="background:var(--sur);border-radius:20px 20px 0 0;padding:24px 20px calc(env(safe-area-inset-bottom,0px)+28px);width:100%;max-width:480px;max-height:92vh;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:10px;flex:1">
-          <div style="width:42px;height:42px;border-radius:12px;background:${col}18;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${ic}" style="font-size:20px;color:${col}"></i></div>
-          <div><div style="font-size:18px;font-weight:800;letter-spacing:-.4px">${sess.title}</div><div style="font-size:12px;color:var(--txt2);margin-top:1px">${sess.d} · ${sess.time} · ${sess.min} min</div></div>
+    modal.innerHTML = `<div id="sess-modal-inner" style="background:var(--sur);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -10px 50px rgba(0,0,0,.45)">
+      <div style="padding:10px 0 0;display:flex;justify-content:center;flex-shrink:0"><div style="width:38px;height:4px;border-radius:2px;background:var(--bdr2)"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 20px 14px;border-bottom:1px solid var(--bdr);flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
+          <div style="width:44px;height:44px;border-radius:13px;background:${col}18;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${ic}" style="font-size:21px;color:${col}"></i></div>
+          <div style="min-width:0"><div style="font-size:18px;font-weight:800;letter-spacing:-.4px;line-height:1.2;overflow:hidden;text-overflow:ellipsis">${sess.title}</div><div style="font-size:12px;color:var(--txt2);margin-top:2px">${sess.d} · ${sess.time} · ${sess.min} min</div></div>
         </div>
-        <button onclick="closeSessDetail()" style="border:none;background:var(--sur2);border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:8px"><i class="ti ti-x" style="font-size:16px"></i></button>
+        <button onclick="closeSessDetail()" style="border:none;background:var(--sur2);border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-x" style="font-size:17px;color:var(--txt2)"></i></button>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <span class="badge" style="background:${col}20;color:${col}">${IC_L[sess.intensity]||sess.intensity}</span>
-        ${sess.gym?`<span class="badge" style="background:var(--amb-l);color:var(--amb-d)">🏋️ gym</span>`:""}
-        ${sess.isTeam?`<span class="badge" style="background:var(--pur-l);color:var(--pur-d)">👥 team</span>`:""}
-        ${sess.rpe!=null?`<span class="badge" style="background:var(--amb-l);color:var(--amb-d)">RPE ${sess.rpe}/10</span>`:""}
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+          <span class="badge" style="background:${col}20;color:${col}">${IC_L[sess.intensity]||sess.intensity}</span>
+          ${sess.gym?`<span class="badge" style="background:var(--amb-l);color:var(--amb-d)">🏋️ gym</span>`:""}
+          ${sess.isTeam?`<span class="badge" style="background:var(--pur-l);color:var(--pur-d)">👥 team</span>`:""}
+          ${sess.rpe!=null?`<span class="badge" style="background:var(--amb-l);color:var(--amb-d)">RPE ${sess.rpe}/10</span>`:""}
+        </div>
+        <div id="sess-drill-body">${bodyHtml}</div>
       </div>
-      <div id="sess-drill-body">${bodyHtml}</div>
-      <div style="display:flex;gap:8px;margin-top:16px">
+      <div style="display:flex;gap:8px;padding:12px 20px calc(env(safe-area-inset-bottom,0px)+16px);border-top:1px solid var(--bdr);flex-shrink:0">
         <button class="btn btn-p" style="flex:1;justify-content:center" onclick="closeSessDetail()"><i class="ti ti-check"></i> Got it</button>
-        <button class="btn btn-s" onclick="LS.s('${cacheKey}',null);closeSessDetail();showSessionDetail(${wk},'${sess.id}')" title="Refresh"><i class="ti ti-refresh"></i></button>
+        <button class="btn btn-s" onclick="LS.s('${cacheKey}',null);LS.s('sessPlan_${sess.id}',null);closeSessDetail();showSessionDetail(${wk},'${sess.id}')" title="Regenerate"><i class="ti ti-refresh"></i></button>
       </div>
     </div>`;
   }
