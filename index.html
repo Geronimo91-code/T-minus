@@ -163,7 +163,6 @@ if ('serviceWorker' in navigator) {
 [data-theme="mission"] input[type=range]{accent-color:#4A9EFF}
 [data-theme="mission"] .stat{background:#0C0F16!important;box-shadow:0 0 0 1px #1C2536}
 [data-theme="mission"] .ppill.active,[data-theme="mission"] .chip.active{background:rgba(74,158,255,.1);border-color:#4A9EFF;color:#4A9EFF}
-[data-theme="mission"] .day-row.on{background:rgba(74,158,255,.08);border-color:#4A9EFF}
 [data-theme="mission"] .wka:hover{border-color:#4A9EFF;color:#4A9EFF}
 
 /* ── PREMIUM MINIMAL component overrides ── */
@@ -205,7 +204,6 @@ if ('serviceWorker' in navigator) {
 [data-theme="minimal"] input[type=range]{accent-color:#111110}
 [data-theme="minimal"] .stat{box-shadow:none!important;border:1px solid #E0E0DC!important}
 [data-theme="minimal"] .ppill.active,[data-theme="minimal"] .chip.active{background:#111110;border-color:#111110;color:#FAFAF8}
-[data-theme="minimal"] .day-row.on{background:#E8E8E4;border-color:#111110}
 [data-theme="minimal"] .w-prog-f{background:#111110}
 
 /* ── WHITE text guaranteed on mobile cd-wrap (both themes) ── */
@@ -407,18 +405,18 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 
 /* ══ TRAINING SESSIONS ══════════════════════════════ */
 .sess{
-  display:flex;align-items:flex-start;gap:11px;padding:14px;
+  display:flex;align-items:flex-start;gap:12px;padding:15px 16px;
   border-radius:var(--r);background:var(--sur);border:1px solid var(--bdr);
   border-left:3.5px solid var(--acc);box-shadow:var(--sh1);transition:opacity .25s,box-shadow .2s;
 }
 .sess:hover{box-shadow:var(--sh2)}
-.sess.done{opacity:.35;border-left-color:var(--bdr2)}
-.sess input[type=checkbox]{width:17px;height:17px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--acc)}
+.sess.done{opacity:.4;border-left-color:var(--bdr2)}
+.sess input[type=checkbox]{width:19px;height:19px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--grn)}
 .s-body{flex:1;min-width:0}
-.s-title{font-size:14px;font-weight:700;line-height:1.35;margin-bottom:4px;letter-spacing:-.2px}
-.s-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px}
+.s-title{font-size:15px;font-weight:800;line-height:1.35;margin-bottom:5px;letter-spacing:-.3px}
+.s-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px}
 .s-meta span{font-size:11px;color:var(--txt2)}
-.s-notes{font-size:12px;color:var(--txt3);line-height:1.5}
+.s-notes{font-size:12px;color:var(--txt3);line-height:1.5;margin-top:2px}
 .s-dur{font-size:13px;font-weight:800;color:var(--txt2);flex-shrink:0}
 
 /* ══ PROGRESS / TESTS ══════════════════════════════ */
@@ -452,11 +450,6 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 .chips{display:flex;flex-wrap:wrap;gap:7px}
 .chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1.5px solid var(--bdr);background:var(--sur2);color:var(--txt2);font-family:inherit;transition:all .15s;font-weight:500;display:inline-flex;align-items:center;gap:4px}
 .chip:hover{border-color:var(--acc);color:var(--acc)}
-.day-grid{display:flex;flex-direction:column;gap:7px}
-.day-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--rs);border:1.5px solid var(--bdr);background:var(--sur2);transition:all .15s}
-.day-row.on{background:var(--acc-l);border-color:var(--acc)}
-.day-name{font-size:13px;font-weight:700;width:36px;flex-shrink:0}
-.day-check{width:18px;height:18px;accent-color:var(--acc);cursor:pointer;flex-shrink:0}
 .water-arc{width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 8px}
 .w-num{font-size:56px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--blu)}
 .w-unit{font-size:16px;font-weight:700;color:var(--txt2);margin-top:3px}
@@ -728,6 +721,9 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
     </div>
   </div>
   <div class="card card-raised"><div class="cp" id="phase-card"></div></div>
+
+  <!-- Peak week / event countdown focus (appears in final weeks) -->
+  <div id="peak-week-card"></div>
 
   <!-- Today's training -->
   <div class="card"><div class="cp">
@@ -1347,8 +1343,6 @@ function getProgramStart() {
   return _snapToMonday(d);
 }
 function getTStart()  { return getProgramStart(); }
-function getWUCC()    { return getEventDate(); }
-
 // Always start the training week on a Monday.
 // Rolls any date back to the Monday of that week (or keeps it if already Monday).
 function _snapToMonday(date) {
@@ -2340,11 +2334,7 @@ function _memoGet(key, fn, ttlMs = 60000) {
   const v = fn();
   _memo[key] = { v, t: now };
   return v;
-}
-function _memoInvalidate(...keys) {
-  keys.forEach(k => { if (_memo[k]) _memo[k].t = 0; });
-}
-// Invalidate all memo when key data changes
+}// Invalidate all memo when key data changes
 function _invalidateCalcCache() {
   Object.keys(_memo).forEach(k => { _memo[k].t = 0; });
 }
@@ -2584,37 +2574,7 @@ async function callAI(prompt) {
   }
 }
 
-// Multi-turn variant — accepts a full messages array (for guided planning chat)
-async function callAIMessages(messages) {
-  if (_aiLock) throw new Error("BUSY");
-  const now = Date.now();
-  if (now - _lastCallMs < MIN_CALL_GAP_MS) throw new Error("BUSY");
-  _aiLock = true; _lastCallMs = now;
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: DEFAULT_MODEL, messages, max_tokens: 400, temperature: 0.6 })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      const msg = data?.error?.message || ("API error "+res.status);
-      if (res.status===429) {
-        const lower = msg.toLowerCase();
-        if (lower.includes("day")||lower.includes("daily")||lower.includes("credit")) throw new Error("DAILY_QUOTA");
-        throw new Error("QUOTA");
-      }
-      if (res.status===401||res.status===403) throw new Error("AUTH: Check your OpenRouter key");
-      throw new Error(msg.substring(0,150));
-    }
-    const raw = data?.choices?.[0]?.message?.content || "";
-    if (!raw) throw new Error("Empty response from AI");
-    return raw.trim();
-  } finally {
-    setTimeout(() => { _aiLock = false; }, MIN_CALL_GAP_MS);
-  }
-}
-let _countdownTimer = null;
+// Multi-turn variant — accepts a full messages array (for guided planning chat)let _countdownTimer = null;
 function showCountdown(sec, containerId, message) {
   clearInterval(_countdownTimer);
   let left = sec;
@@ -2652,6 +2612,53 @@ function _syncDashToggles() {
     const el = q(id);
     if (el) el.className = "tgl " + (LS.g(key, false) ? "on" : "off");
   });
+}
+
+// Peak-week card: appears in the final ~2 weeks with a taper/readiness focus
+function renderPeakWeek() {
+  const el = q("peak-week-card");
+  if (!el) return;
+  const days = daysToEvent();
+  // Only show inside the final 14 days (and not after the event)
+  if (days < 0 || days > 14) { el.innerHTML = ""; return; }
+
+  const isFinalWeek = days <= 7;
+  const accent = isFinalWeek ? "var(--red)" : "var(--amb)";
+  const accentL = isFinalWeek ? "var(--red-l)" : "var(--amb-l)";
+  const title = isFinalWeek ? "Event week — peak & taper" : "Taper begins — sharpen up";
+
+  // Checklist items tuned to the phase
+  const items = isFinalWeek ? [
+    "Reduce training volume — keep intensity, cut duration",
+    "Prioritise 8+ hours sleep every night",
+    "Stay hydrated — sip through the day",
+    "Log your final fitness test to confirm peak",
+    "Prep kit, nutrition and travel the day before",
+    "Light movement only the day before — rest, don't cram",
+  ] : [
+    "Start cutting session length (volume down ~40%)",
+    "Keep a couple of sharp, high-intensity efforts",
+    "Lock in a consistent sleep schedule now",
+    "Dial in race-week nutrition — practise it",
+    "Review your progress trends — trust the work",
+  ];
+
+  el.innerHTML = `<div class="card" style="border:1.5px solid ${accent};background:linear-gradient(135deg,${accentL},transparent)"><div class="cp">
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+      <div style="width:44px;height:44px;border-radius:12px;background:${accent};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-flag-3" style="font-size:22px;color:#fff"></i></div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.3px">${title}</div>
+        <div style="font-size:13px;color:var(--txt2);margin-top:1px"><strong style="color:${accent}">${days} day${days===1?"":"s"}</strong> to ${S.eventName}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      ${items.map(t=>`<div style="display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--bdr)">
+        <i class="ti ti-point-filled" style="font-size:14px;color:${accent};margin-top:2px;flex-shrink:0"></i>
+        <div style="font-size:13px;line-height:1.5">${t}</div>
+      </div>`).join("")}
+    </div>
+    <button class="btn btn-s" style="width:100%;justify-content:center;margin-top:12px" onclick="goTab('chat',null);setTimeout(weeklyCheckIn,300)"><i class="ti ti-message-chatbot"></i> Ask coach about my peak</button>
+  </div></div>`;
 }
 
 function renderTodayTraining() {
@@ -3454,20 +3461,6 @@ function renderAll(force = false) {
 }
 
 // ─── API KEY ─────────────────────────────────────────────
-function saveKey() {
-  const kv = q("api-key-inp").value.trim();
-  const uv = q("api-url-inp").value.trim();
-  if (kv && !kv.includes("•")) { S.key=kv; LS.s("key",kv); saveSharedApiKey(kv); }
-  S.url = uv || DEFAULT_URL; LS.s("url",S.url);
-  q("api-key-inp").value = "••••••••••••";
-  renderDash();
-}
-function clearKey() {
-  S.key=""; S.url=""; LS.s("key",""); LS.s("url","");
-  q("api-key-inp").value="";
-  q("api-url-inp").value=DEFAULT_URL;
-  renderDash();
-}
 async function testKey() {
   const out = q("test-key-out");
   out.style.color="var(--txt2)"; out.textContent="Testing connection...";
@@ -3499,9 +3492,7 @@ async function testKey() {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────
-function errBox(msg){ return `<div class="abox" style="background:var(--red-l);color:var(--red-d);border:1.5px solid #DC262630;border-radius:var(--rs)"><i class="ti ti-alert-circle"></i><div>${msg}</div></div>`; }
-function infoBox(msg){ return `<div class="abox" style="background:var(--blu-l);color:var(--blu-d);border:1.5px solid #2563EB30;border-radius:var(--rs)"><i class="ti ti-info-circle"></i><div>${msg}</div></div>`; }
-function showPlanErr(html){ q("plan-err").style.display="block"; q("plan-err").innerHTML=html; }
+function errBox(msg){ return `<div class="abox" style="background:var(--red-l);color:var(--red-d);border:1.5px solid #DC262630;border-radius:var(--rs)"><i class="ti ti-alert-circle"></i><div>${msg}</div></div>`; }function showPlanErr(html){ q("plan-err").style.display="block"; q("plan-err").innerHTML=html; }
 function hidePlanErr(){ q("plan-err").style.display="none"; }
 function toast(msg, col="var(--grn)") {
   const t = document.createElement("div");
@@ -3834,16 +3825,7 @@ function toggleSection(bodyId, iconId) {
     body.style.maxHeight = "0";
     if (icon) icon.style.transform = "rotate(0deg)";
   }
-}
-function openSection(bodyId, iconId) {
-  const body = q(bodyId); const icon = q(iconId);
-  if (!body || _sectionOpen[bodyId]) return;
-  _sectionOpen[bodyId] = true;
-  _saveSectionState();
-  body.style.maxHeight = (body.scrollHeight + 500) + "px";
-  if (icon) icon.style.transform = "rotate(180deg)";
-}
-// Restore remembered open sections when the Progress tab renders
+}// Restore remembered open sections when the Progress tab renders
 function _restoreSections() {
   [["week-summary-body","week-sum-icon"],["fitness-tests-body","fitness-icon"]].forEach(([b,i]) => {
     if (_sectionOpen[b]) {
@@ -3987,6 +3969,7 @@ function renderDash() {
 
   const ks=q("key-status");
   ks.textContent="✓ AI ready — tap AI plan in Training"; ks.style.color="var(--grn)";
+  renderPeakWeek();
   renderTodayTraining();
   renderAgenda();
 }
@@ -4100,34 +4083,6 @@ function saveWeekNotes(btn) {
   S.weekLog[S.sumWeek].notes=q("week-notes").value;
   LS.s("weekLog",S.weekLog);
   if (btn) { btn.innerHTML='<i class="ti ti-check"></i> Saved!'; setTimeout(()=>btn.innerHTML='<i class="ti ti-check"></i> Save notes',1500); }
-}
-
-function makeSVGChart(entries, target, lowerBetter, unit) {
-  if (entries.length < 2) return "";
-  const W=280, H=70, PAD=8;
-  const vals = entries.map(e=>+e.value);
-  const tgt  = +target;
-  const allVals = [...vals, tgt];
-  const mn = Math.min(...allVals), mx = Math.max(...allVals);
-  const rng = mx - mn || 1;
-  const px = (v) => PAD + ((v-mn)/rng)*(W-PAD*2);
-  const py = (v) => (H-PAD) - ((v-mn)/rng)*(H-PAD*2);
-  const pts = entries.map((e,i)=>[px(+e.value), py(+e.value)]);
-  const line = pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
-  const areaClose = `L${pts[pts.length-1][0].toFixed(1)},${H} L${pts[0][0].toFixed(1)},${H} Z`;
-  const targetY = py(tgt).toFixed(1);
-  const latest = vals[vals.length-1];
-  const hit = lowerBetter ? latest <= tgt : latest >= tgt;
-  const col = hit ? "var(--grn)" : "var(--amb)";
-  const dots = pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===pts.length-1?4:2.5}" fill="${i===pts.length-1?col:"var(--bdr2)"}" />`).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:60px;overflow:visible;display:block;margin-top:6px">
-    <defs><linearGradient id="cg${unit.replace(/\W/g,'')}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${col}" stop-opacity=".18"/><stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
-    <line x1="${PAD}" y1="${targetY}" x2="${W-PAD}" y2="${targetY}" stroke="var(--bdr2)" stroke-width="1" stroke-dasharray="4,3"/>
-    <text x="${W-PAD-2}" y="${+targetY-3}" font-size="9" fill="var(--txt3)" text-anchor="end">target</text>
-    <path d="${line} ${areaClose}" fill="url(#cg${unit.replace(/\W/g,'')})" />
-    <path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${dots}
-  </svg>`;
 }
 
 function renderTestCards() {
@@ -4367,17 +4322,6 @@ function renderVitamins() {
   // S.supps still feeds the AI coach context ("Supplements: ...").
 }
 
-function updateVitTime(idx, newTime) {
-  if (!S.vitSched?.items?.[idx]) return;
-  S.vitSched.items[idx].time = newTime;
-  // Update lbl to match new time
-  const h = parseInt(newTime);
-  S.vitSched.items[idx].lbl = h < 10 ? "Morning" : h < 13 ? "Midday" : h < 17 ? "Afternoon" : h < 20 ? "Evening" : "Bedtime";
-  LS.s("vitSched", S.vitSched);
-  renderDash(); // update reminder card
-  toast("Time updated ✓");
-}
-
 function togSupp(id) {
   S.supps=S.supps.includes(id)?S.supps.filter(x=>x!==id):[...S.supps,id];
   LS.s("supps",S.supps); S.vitSched=null; LS.s("vitSched",null);
@@ -4609,8 +4553,6 @@ function renderSleep() {
     if (slWake && S.wakeTime) slWake.value = S.wakeTime;
   }
 }
-function togBed(){  S.bedOn =!S.bedOn; LS.s("bedOn", S.bedOn); _invalidateCalcCache(); renderSleep();renderDash(); }
-function togWake(){ S.wakeOn=!S.wakeOn;LS.s("wakeOn",S.wakeOn);_invalidateCalcCache(); renderSleep();renderDash(); }
 function saveSleep(){
   S.bedTime=q("bed-time").value; S.wakeTime=q("wake-time").value;
   LS.s("bedTime",S.bedTime); LS.s("wakeTime",S.wakeTime);
@@ -4619,69 +4561,6 @@ function saveSleep(){
 }
 
 // ─── TRAINING SCHEDULE ───────────────────────────────────
-function renderDayGrid() {
-  const grid = q("day-grid");
-  if (!grid) return;  // schedule section removed
-  if (!S.sched) S.sched = Object.assign({}, DEFAULT_SCHED);
-  grid.innerHTML=DAYS.map(day=>{
-    const ds=(S.sched||DEFAULT_SCHED)[day]||{on:false,slots:[],gym:false};
-    const hasMorn=ds.slots.includes("morning"),hasEve=ds.slots.includes("evening");
-    const dis=!ds.on?"disabled":"";
-    return `<div class="day-row${ds.on?" on":""}" id="dr-${day}">
-      <input type="checkbox" class="day-check" ${ds.on?"checked":""} onchange="togDay('${day}',this.checked)">
-      <div class="day-name" style="color:${ds.on?"var(--grn-d)":"var(--txt2)"}">${day}</div>
-      <div style="display:flex;gap:5px;flex:1;flex-wrap:wrap">
-        <button ${dis} onclick="togSlot('${day}','morning')" style="padding:4px 9px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid ${hasMorn&&ds.on?"var(--grn)":"var(--bdr)"};background:${hasMorn&&ds.on?"var(--grn-l)":"var(--sur2)"};color:${hasMorn&&ds.on?"var(--grn-d)":"var(--txt3)"}">☀️ Morn</button>
-        <button ${dis} onclick="togSlot('${day}','evening')" style="padding:4px 9px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid ${hasEve&&ds.on?"var(--pur)":"var(--bdr)"};background:${hasEve&&ds.on?"var(--pur-l)":"var(--sur2)"};color:${hasEve&&ds.on?"var(--pur-d)":"var(--txt3)"}">🌙 Eve</button>
-        <button ${dis} onclick="togGym('${day}')" style="padding:4px 9px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid ${ds.gym&&ds.on?"var(--amb)":"var(--bdr)"};background:${ds.gym&&ds.on?"var(--amb-l)":"var(--sur2)"};color:${ds.gym&&ds.on?"var(--amb-d)":"var(--txt3)"}">🏋️ Gym</button>
-      </div>
-    </div>`;
-  }).join("");
-}
-function togDay(day,val){
-  if(!S.sched)S.sched=Object.assign({},DEFAULT_SCHED);
-  if(!S.sched[day])S.sched[day]={on:false,slots:[],gym:false};
-  S.sched[day].on=val;
-  if(val&&!S.sched[day].slots.length)S.sched[day].slots=["morning"];
-  LS.s("sched",S.sched);renderDayGrid();
-}
-function togSlot(day,slot){
-  if(!S.sched[day]?.on)return;
-  const slots=S.sched[day].slots;
-  S.sched[day].slots=slots.includes(slot)?slots.filter(s=>s!==slot):[...slots,slot];
-  LS.s("sched",S.sched);renderDayGrid();
-}
-function togGym(day){
-  if(!S.sched[day]?.on)return;
-  S.sched[day].gym=!S.sched[day].gym;
-  LS.s("sched",S.sched);renderDayGrid();
-}
-
-function setPlanMode(mode) {
-  LS.s("planMode", mode);
-  applyPlanMode(mode);
-  if (mode === 'ai') genAI(false);
-  else genTemplate();
-}
-
-function applyPlanMode(mode) {
-  const btnD = q("mode-btn-default"), btnA = q("mode-btn-ai");
-  if (!btnD || !btnA) return;
-  const activeStyle = "background:var(--acc);color:#fff";
-  const inactiveStyle = "background:var(--sur2);color:var(--txt2)";
-  if (mode === "ai") {
-    btnA.style.cssText = btnA.style.cssText.replace(/background:[^;]+;color:[^;]+/, "") + activeStyle;
-    btnD.style.cssText = btnD.style.cssText.replace(/background:[^;]+;color:[^;]+/, "") + inactiveStyle;
-    const totalDone = Object.values(S.prog||{}).flat().filter(s=>s.done).length;
-    const adjWrap = q("adj-btn-wrap");
-    if (adjWrap) adjWrap.style.display = totalDone > 0 ? "block" : "none";
-  } else {
-    btnD.style.cssText = btnD.style.cssText.replace(/background:[^;]+;color:[^;]+/, "") + activeStyle;
-    btnA.style.cssText = btnA.style.cssText.replace(/background:[^;]+;color:[^;]+/, "") + inactiveStyle;
-    const adjWrap = q("adj-btn-wrap"); if (adjWrap) adjWrap.style.display = "none";
-  }
-}
-
 // ─── TRAINING RENDER ─────────────────────────────────────
 const DAY_ORDER=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 function sortWk(w){ if(S.prog[w])S.prog[w].sort((a,b)=>DAY_ORDER.indexOf(a.d)-DAY_ORDER.indexOf(b.d)); }
@@ -4734,6 +4613,21 @@ function renderTraining() {
             ${s.garmin_data?`<span class="badge" style="background:#0074B815;color:#0074B8;border:1px solid #0074B830"><i class="ti ti-device-watch" style="font-size:10px"></i> Garmin</span>`:""}
           </div>
           ${s.notes?`<div class="s-notes">${s.notes}</div>`:""}
+          ${(()=>{
+            // Inline progress: show logged sets or a recorded metric result
+            if (s.log?.exercises?.length) {
+              const allSets = s.log.exercises.flatMap(e=>e.sets||[]);
+              const doneSets = allSets.filter(x=>x.done);
+              if (doneSets.length) {
+                const top = Math.max(...doneSets.filter(x=>+x.weight>0).map(x=>+x.weight), 0);
+                return `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--grn-l);border:1px solid var(--grn);border-radius:20px;font-size:11px;font-weight:700;color:var(--grn-d)"><i class="ti ti-barbell" style="font-size:12px"></i> ${doneSets.length} sets logged${top>0?` · top ${top}${S.weightUnit||"kg"}`:""}</div>`;
+              }
+            }
+            if (s.log?.metric && s.log.value!=null) {
+              return `<div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--pur-l);border:1px solid var(--pur);border-radius:20px;font-size:11px;font-weight:700;color:var(--pur-d)"><i class="ti ti-target-arrow" style="font-size:12px"></i> ${s.log.metric}: ${s.log.value}${s.log.unit||""}</div>`;
+            }
+            return "";
+          })()}
           ${s.garmin_data?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;padding:7px 9px;background:#0074B80A;border-radius:var(--rx);border:1px solid #0074B820">
             ${s.garmin_data.avgHR?`<span style="font-size:11px;font-weight:600;color:var(--txt2)">❤️ ${s.garmin_data.avgHR}${s.garmin_data.maxHR?" / "+s.garmin_data.maxHR:""} bpm</span>`:""}
             ${s.garmin_data.distanceKm?`<span style="font-size:11px;font-weight:600;color:var(--txt2)">📍 ${s.garmin_data.distanceKm} km</span>`:""}
@@ -4748,24 +4642,6 @@ function renderTraining() {
               background:var(--sur2);color:var(--txt2);display:inline-flex;align-items:center;gap:4px">
               <i class="ti ti-info-circle" style="font-size:12px"></i> How to do this
             </button>
-            ${s.type===_G||s.gym?`<button onclick="event.stopPropagation();showGymTracker(${w},'${s.id}')"
-              style="padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;
-              cursor:pointer;font-family:inherit;border:1px solid var(--amb);
-              background:var(--amb-l);color:var(--amb-d);display:inline-flex;align-items:center;gap:4px">
-              <i class="ti ti-barbell" style="font-size:12px"></i> Track sets
-            </button>`:''}
-            ${!s.done&&s.type!==_G&&s.type!=="recovery"?`<button onclick="event.stopPropagation();garminPushSession(${w},'${s.id}')"
-              style="padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;
-              cursor:pointer;font-family:inherit;border:1px solid ${s.garmin_workout_id?"#05996940":"#0074B840"};
-              background:${s.garmin_workout_id?"var(--grn-l)":"#0074B810"};color:${s.garmin_workout_id?"var(--grn-d)":"#0074B8"};display:inline-flex;align-items:center;gap:4px">
-              <i class="ti ${s.garmin_workout_id?"ti-check":"ti-device-watch"}" style="font-size:12px"></i> ${s.garmin_workout_id?"On Garmin":"Push to watch"}
-            </button>`:''}
-            ${!s.done&&(s.type===_G||s.gym)?`<button onclick="event.stopPropagation();exportSessionTCX(${w},'${s.id}')"
-              style="padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;
-              cursor:pointer;font-family:inherit;border:1px solid #0074B840;
-              background:#0074B810;color:#0074B8;display:inline-flex;align-items:center;gap:4px">
-              <i class="ti ti-file-download" style="font-size:12px"></i> Export .tcx
-            </button>`:''}
           </div>
         </div>
         <button onclick="event.stopPropagation();delSess(${w},'${s.id}')" style="border:none;background:transparent;cursor:pointer;color:var(--txt3);padding:4px;flex-shrink:0;align-self:flex-start" title="Delete session"><i class="ti ti-trash" style="font-size:14px"></i></button>
@@ -4783,244 +4659,7 @@ function nextWk(){ if(S.vwk<getTotalWk()){S.vwk++;renderTraining();renderDash();
 function jumpPhase(w){ S.vwk=w;renderTraining();renderDash(); }
 function delSess(wk,id){ S.prog[wk]=(S.prog[wk]||[]).filter(s=>s.id!==id);LS.s("prog",S.prog);renderTraining(); }
 
-let teamOpen=false;
-function togTeamForm(){ const f=q("team-form"); if(!f) return; teamOpen=!teamOpen;f.style.display=teamOpen?"block":"none"; }
-function addTeam(){
-  const id="tm_"+Date.now();
-  const s={id,d:q("t-day").value,time:q("t-time").value,min:90,type:"team",
-    title:"Team practice",notes:q("t-notes").value||"Team session",
-    intensity:"hi",done:false,isTeam:true,theme:"",gym:false,rpe:null};
-  if(!S.prog[S.vwk])S.prog[S.vwk]=[];
-  S.prog[S.vwk].push(s);sortWk(S.vwk);LS.s("prog",S.prog);
-  q("t-notes").value="";togTeamForm();renderTraining();
-}
-
-// ─── OFFLINE TEMPLATE ────────────────────────────────────
-// ─── GYM SESSION TRACKER ────────────────────────────────────────────────────
-function parseExercises(notes) {
-  if (!notes) return [];
-  const raw = notes.split(/[,;.\n]+/).map(s=>s.trim()).filter(s=>s.length>2);
-  return raw.map((text,i)=>{
-    const m = text.match(/(\d+)\s*[x×]\s*(\d+)/i);
-    return {
-      id:   "ex"+i,
-      name: text.replace(/(\d+)\s*[x×]\s*\d+/i,"").replace(/^[-–·•\s]+/,"").trim()||text,
-      sets: m?+m[1]:3,
-      reps: m?+m[2]:8,
-      logs: []
-    };
-  }).filter(ex=>ex.name.length>1);
-}
-
-function showGymTracker(wk, sessId) {
-  const sess = (S.prog[wk]||[]).find(s=>s.id===sessId);
-  if (!sess) return;
-  const key = "gymlog_"+wk+"_"+sessId;
-  let saved = LS.g(key, null);
-  const exercises = saved ? saved.exercises : parseExercises(sess.notes||"");
-
-  let modal = q("gym-tracker-modal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "gym-tracker-modal";
-    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center;overflow-y:auto";
-    modal.addEventListener("click", e=>{if(e.target===modal)closeGymTracker();});
-    document.body.appendChild(modal);
-  }
-  modal._wk=wk; modal._sessId=sessId; modal._key=key; modal._exercises=exercises;
-
-  function draw() {
-    const exArr = modal._exercises;
-    const total  = exArr.reduce((a,ex)=>a+ex.sets,0);
-    const done   = exArr.reduce((a,ex)=>a+ex.logs.filter(l=>l.done).length,0);
-    const pct    = total?Math.round(done/total*100):0;
-    const prevSessions = [];
-    // Look for previous logged session same type for reference weights
-    for(let pw=1;pw<wk;pw++){
-      const pk="gymlog_"+pw+"_";
-      // just use current as reference if saved
-    }
-    modal.innerHTML = `<div style="background:var(--sur);border-radius:20px 20px 0 0;
-      padding:20px 18px calc(env(safe-area-inset-bottom,0px)+24px);
-      width:100%;max-width:480px;max-height:92vh;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div>
-          <div style="font-size:17px;font-weight:800">${sess.title}</div>
-          <div style="font-size:12px;color:var(--txt2)">${sess.d} · ${sess.time} · ${sess.min} min</div>
-        </div>
-        <button onclick="closeGymTracker()" style="border:none;background:var(--sur2);border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-          <i class="ti ti-x" style="font-size:16px"></i>
-        </button>
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px">
-          <span>${done}/${total} sets done</span><span style="color:var(--grn)">${pct}%</span>
-        </div>
-        <div style="height:6px;background:var(--sur2);border-radius:3px;border:1px solid var(--bdr);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:var(--grn);border-radius:3px;transition:width .3s"></div>
-        </div>
-      </div>
-      ${exArr.length===0?`<div style="padding:20px;text-align:center;color:var(--txt2)">
-        <i class="ti ti-pencil" style="font-size:32px;display:block;margin-bottom:8px;color:var(--txt3)"></i>
-        No exercises parsed from session notes.<br>
-        <small style="color:var(--txt3)">Format notes as: "Back squat 4×8, RDL 3×10"</small>
-      </div>`:
-      exArr.map((ex,ei)=>{
-        const allDone=ex.sets>0&&ex.logs.filter(l=>l.done).length===ex.sets;
-        return `<div style="margin-bottom:14px;border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;background:var(--sur2)">
-          <div style="padding:10px 14px;background:${allDone?"var(--grn-l)":"transparent"};border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px">
-            <i class="ti ti-barbell" style="color:${allDone?"var(--grn)":"var(--amb)"}"></i>
-            <div style="font-weight:700;flex:1;font-size:14px">${ex.name}</div>
-            <div style="font-size:11px;color:var(--txt2)">${ex.sets}×${ex.reps}</div>
-          </div>
-          <div style="padding:0 14px">
-            <div style="display:flex;gap:6px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px">
-              <div style="min-width:42px">Set</div>
-              <div style="flex:1;text-align:center">Reps</div>
-              <div style="flex:1;text-align:center">Weight (kg)</div>
-              <div style="width:32px"></div>
-            </div>
-            ${Array.from({length:ex.sets},(_,si)=>{
-              const log=ex.logs[si]||{};
-              return `<div style="display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--bdr)">
-                <div style="font-size:12px;font-weight:700;color:var(--txt3);min-width:42px">Set ${si+1}</div>
-                <input type="number" value="${log.reps||""}" placeholder="${ex.reps}"
-                  min="0" max="99"
-                  oninput="gymSetField(${ei},${si},'reps',this.value)"
-                  style="flex:1;font-size:15px;font-weight:700;text-align:center;border:1px solid var(--bdr2);border-radius:var(--rx);padding:7px 4px;background:var(--sur);color:var(--txt);font-family:inherit">
-                <input type="number" value="${log.weight||""}" placeholder="—"
-                  min="0" max="999" step="0.5"
-                  oninput="gymSetField(${ei},${si},'weight',this.value)"
-                  style="flex:1;font-size:15px;font-weight:700;text-align:center;border:1px solid var(--bdr2);border-radius:var(--rx);padding:7px 4px;background:var(--sur);color:var(--txt);font-family:inherit">
-                <button onclick="gymToggleDone(${ei},${si})"
-                  style="width:32px;height:32px;border-radius:50%;cursor:pointer;flex-shrink:0;
-                    border:2px solid ${log.done?"var(--grn)":"var(--bdr2)"};
-                    background:${log.done?"var(--grn)":"transparent"};
-                    display:flex;align-items:center;justify-content:center">
-                  <i class="ti ti-check" style="font-size:13px;color:${log.done?"#fff":"var(--bdr2)"}"></i>
-                </button>
-              </div>`;
-            }).join("")}
-          </div>
-        </div>`;
-      }).join("")}
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn btn-p" style="flex:1;justify-content:center"
-          onclick="saveGymSession()">
-          <i class="ti ti-device-floppy"></i> Save session
-        </button>
-        <button class="btn" style="padding:10px 14px" onclick="closeGymTracker()">Close</button>
-      </div>
-    </div>`;
-    modal.style.display="flex";
-  }
-  modal._draw = draw;
-  draw();
-}
-
-function gymSetField(ei, si, field, value) {
-  const modal = q("gym-tracker-modal"); if(!modal) return;
-  const ex = modal._exercises[ei];
-  if (!ex.logs[si]) ex.logs[si]={};
-  ex.logs[si][field] = value;
-}
-
-function gymToggleDone(ei, si) {
-  const modal = q("gym-tracker-modal"); if(!modal) return;
-  const ex = modal._exercises[ei];
-  if (!ex.logs[si]) ex.logs[si]={};
-  ex.logs[si].done = !ex.logs[si].done;
-  LS.s(modal._key, {exercises:modal._exercises});
-  modal._draw();
-}
-
-function saveGymSession() {
-  const modal = q("gym-tracker-modal"); if(!modal) return;
-  const {_key,_exercises,_wk,_sessId} = modal;
-  LS.s(_key, {exercises:_exercises, savedAt:new Date().toISOString()});
-  const total = _exercises.reduce((a,ex)=>a+ex.sets,0);
-  const done  = _exercises.reduce((a,ex)=>a+ex.logs.filter(l=>l.done).length,0);
-  closeGymTracker();
-  toast("Session saved ✓");
-  if (done>=total&&total>0) showRPE(_wk,_sessId,false);
-  else renderTraining();
-}
-
-function closeGymTracker() {
-  const m=q("gym-tracker-modal"); if(m) m.style.display="none";
-}
-
-function genTemplate() {
-  if (!S.prog) S.prog = {};
-  if (!S.sched) S.sched = Object.assign({}, DEFAULT_SCHED);
-  const p    = phaseOf(S.vwk) || buildDefaultPhases()[0];
-  const prof = sportProfile();
-  const pool = prof?.templatePool?.[p?.n] || prof?.templatePool?.Foundation || [];
-  const sched     = S.sched;
-  const activeDays= DAYS.filter(d=>sched[d]?.on);
-  if (!activeDays.length) {
-    showPlanErr(errBox("Set your training schedule below first, then tap Template."));
-    return;
-  }
-  const teams     = (S.prog[S.vwk]||[]).filter(s=>s.isTeam);
-  const teamDaySet= new Set(teams.map(t=>t.d));
-  const freeDays  = activeDays.filter(d=>!teamDaySet.has(d));
-  const theme     = `${p?.n||""} — ${S.sport} week ${S.vwk}/${getTotalWk()}`;
-
-  const gymPool  = pool.filter(s=>s.gym);
-  const fieldPool= pool.filter(s=>!s.gym);
-  const sessions = [];
-  let fieldIdx=0,gymIdx=0;
-
-  for(let i=0;i<Math.min(freeDays.length,5);i++){
-    const day=freeDays[i];
-    const ds=sched[day]||{};
-    const hasGym=!!ds.gym;
-    const slot=ds.slots?.[0]==="evening"?"18:00":"06:30";
-    let sess;
-    if(hasGym&&gymIdx<gymPool.length){ sess=gymPool[gymIdx++]; }
-    else if(fieldIdx<fieldPool.length){ sess=fieldPool[fieldIdx++]; }
-    else break;
-    sessions.push({id:`w${S.vwk}t${i}`,d:day,time:slot,min:sess.min,type:sess.type,
-      title:sess.title,notes:sess.notes,intensity:sess.intensity,
-      gym:sess.gym&&hasGym,done:false,isTeam:false,theme,rpe:null});
-  }
-  S.prog[S.vwk]=[...sessions,...teams];
-  sortWk(S.vwk);LS.s("prog",S.prog);
-  renderTraining();renderDash();
-  toast("Template plan loaded ✓");
-}
-
 // ─── BULK PROGRAM GENERATION ─────────────────────────────────
-async function genAllWeeks() {
-  const total   = getTotalWk();
-  const startWk = S.vwk;
-  const remaining = [];
-  for (let wk = startWk; wk <= total; wk++) {
-    if ((S.prog[wk]||[]).filter(s=>!s.isTeam).length === 0) remaining.push(wk);
-  }
-  if (!remaining.length) { toast("All weeks already have a plan. Delete weeks you want to regenerate.","var(--amb)"); return; }
-  if (!confirm(`Generate AI training plans for ${remaining.length} week${remaining.length!==1?"s":""}?\n\nThis takes ~${Math.ceil(remaining.length*8)}s due to rate limits between calls. Do not close the app.`)) return;
-
-  const btn = q("gen-all-btn");
-  if (btn) btn.disabled = true;
-  let ok = 0, fail = 0;
-
-  for (let i = 0; i < remaining.length; i++) {
-    const wk = remaining[i];
-    if (btn) btn.innerHTML = `<div class="spin spin-d" style="display:inline-block;width:12px;height:12px"></div> Week ${wk}/${total} (${i+1}/${remaining.length})…`;
-    S.vwk = wk;
-    try { await genAI(false); ok++; }
-    catch(e) { fail++; console.warn(`Wk ${wk} failed:`, e.message); }
-    if (i < remaining.length - 1) await new Promise(r => setTimeout(r, 6000));
-  }
-
-  S.vwk = startWk;
-  if (btn) { btn.disabled = false; btn.innerHTML = `<i class="ti ti-player-skip-forward"></i> Generate full program (all weeks)`; }
-  renderTraining(); renderDash();
-  toast(`✓ ${ok} week${ok!==1?"s":""} generated${fail?`, ${fail} failed — retry manually`:""}`, "var(--grn)");
-}
-
 // ─── AI PLAN ─────────────────────────────────────────────
 // ─── GUIDED AI PLANNING (conversational intake before generating) ───
 // ─── GUIDED PLANNING (tap-to-select form) ───
@@ -5141,6 +4780,7 @@ ${S.bodyweight?`- Bodyweight: ${S.bodyweight} ${S.weightUnit} (use for gym load 
 ${teams.length?`Existing team practices already logged (keep, don't duplicate): ${JSON.stringify(teams.map(t=>({d:t.d,time:t.time})))}`:""}
 
 Create exactly the number of each session type requested. Place them across the week around the team days, with at least one rest/recovery day and no back-to-back high/max days.
+${teamDays.length?`On each team practice day (${teamDays.join(", ")}) add ONE session with type "team", title "Team practice", intensity "high", min 120 — but leave notes as an empty string. Do NOT invent goals or drills for team sessions; the athlete runs those separately.`:""}
 
 Return ONLY valid JSON — no markdown:
 {"theme":"weekly focus 6-8 words","sessions":[{"id":"w${wk}s1","d":"Mon","time":"06:30","min":60,"type":"gym","title":"Session title","notes":"specific focus 10-14 words","intensity":"medium","gym":true${_planForm.test?',"isTest":false':''}}]}
@@ -5148,6 +4788,7 @@ Return ONLY valid JSON — no markdown:
 RULES:
 - d: Mon Tue Wed Thu Fri Sat Sun. type: conditioning|skills|team|recovery|rest|gym. intensity: low|medium|high|max|rest.
 - gym:true for strength sessions. For the throwing sessions use type "skills".
+- Team sessions: title "Team practice", empty notes, no drills.
 ${_planForm.test?'- Mark the fitness-test session with "isTest":true and give it type "conditioning" or "skills" as fits the test.':''}
 - Respect the requested counts exactly.`;
 
@@ -5159,7 +4800,7 @@ ${_planForm.test?'- Mark the fitness-test session with "isTest":true and give it
   if (!S.prog) S.prog = {};
   const existTeams = ((S.prog||{})[wk]||[]).filter(s=>s.isTeam);
   S.prog[wk] = [
-    ...parsed.sessions.map(s=>({...s, done:false, theme:parsed.theme||"", rpe:null})),
+    ...parsed.sessions.map(s=>({...s, done:false, theme:parsed.theme||"", rpe:null, isTeam: s.type==="team", notes: s.type==="team" ? "" : s.notes})),
     ...existTeams,
   ];
   sortWk(wk);
@@ -5264,7 +4905,7 @@ RULES:
     }
   }catch(e){
     if(e.message==="QUOTA"){q("plan-retry").style.display="block";showCountdown(65,"plan-retry","Rate limit (15 req/min).");}
-    else if(e.message==="DAILY_QUOTA"){showPlanErr(errBox("⛔ Daily credits exhausted — loading template plan instead…"));setTimeout(genTemplate,1500);}
+    else if(e.message==="DAILY_QUOTA"){showPlanErr(errBox("⛔ Daily AI credits exhausted — try again tomorrow."));}
     else if(e.message==="BUSY"){q("plan-retry").style.display="block";showCountdown(8,"plan-retry","Another request is in progress.");}
     else{showPlanErr(errBox(e.message==="NO_KEY"?"Add API key on Dashboard.":"Error: "+e.message));}
   }
@@ -5477,24 +5118,6 @@ function recordMetric(name, value, unit, wk) {
 }
 
 // Save a gym session's set log onto the session object
-function saveSetLog(wk, sessId, sets) {
-  const arr = S.prog[wk] || [];
-  const i = arr.findIndex(s => s.id === sessId);
-  if (i < 0) return;
-  arr[i] = { ...arr[i], log: { ...(arr[i].log||{}), sets } };
-  // If every set is done, mark the session done
-  const allDone = sets.length > 0 && sets.every(s => s.done);
-  if (allDone) arr[i].done = true;
-  S.prog[wk] = arr;
-  LS.s("prog", S.prog);
-  // Mirror top-set weight into history (heaviest completed set)
-  const completed = sets.filter(s => s.done && +s.weight > 0);
-  if (completed.length) {
-    const top = Math.max(...completed.map(s => +s.weight));
-    recordMetric(arr[i].title, top, "kg", wk);
-  }
-}
-
 // Save a measurable test/accuracy result
 function saveMetricResult(wk, sessId, name, value, unit) {
   const arr = S.prog[wk] || [];
@@ -5821,6 +5444,19 @@ async function showSessionDetail(wk, sessId) {
   }
 
   const isGym = sess.gym || sess.type === _G;
+
+  // Team practice: you run these yourself, so no AI content — just a simple
+  // note plus the option to log a measurable result if you want.
+  if (sess.isTeam || sess.type === "team") {
+    renderSessModal(`
+      <div style="text-align:center;padding:20px 12px 24px">
+        <div style="width:56px;height:56px;border-radius:16px;background:var(--pur-l);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="ti ti-users" style="font-size:28px;color:var(--pur)"></i></div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px">Team practice</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.55;max-width:280px;margin:0 auto">This one's run by your team — no plan needed here. Check it off when done, or log a result below if you want to track something.</div>
+      </div>
+      ${_metricBox(sess, wk)}`);
+    return;
+  }
 
   // Gym sessions must rebuild live (set values, prefill, _openSessLog wiring),
   // so only use the cached HTML for non-gym sessions.
@@ -6391,10 +6027,51 @@ function renderChat() {
 // One-tap weekly review — sends a structured prompt to the coach
 function weeklyCheckIn() {
   const inp = q("chat-input");
-  if (inp) {
-    inp.value = "Give me my weekly check-in: review my training completion, sleep, and RPE this week, flag anything concerning, and tell me my top focus for the week ahead. Be concise.";
-    sendChat();
-  }
+  if (!inp) return;
+  const wk = curWk();
+  const ws = (S.prog[wk]||[]);
+  const done = ws.filter(s=>s.done).length;
+  const total = ws.filter(s=>s.type!=="rest"&&s.type!=="rs").length;
+
+  // RPE
+  const rpes = ws.filter(s=>s.done&&s.rpe!=null).map(s=>s.rpe);
+  const avgRPE = rpes.length ? (rpes.reduce((a,b)=>a+b,0)/rpes.length).toFixed(1) : null;
+
+  // Logged lifts this week (top set per exercise)
+  const lifts = [];
+  ws.forEach(s=>{
+    (s.log?.exercises||[]).forEach(e=>{
+      const doneSets = (e.sets||[]).filter(x=>x.done&&+x.weight>0);
+      if (doneSets.length) lifts.push(`${e.name} ${Math.max(...doneSets.map(x=>+x.weight))}${S.weightUnit||"kg"}`);
+    });
+  });
+
+  // Metric/test results this week + trend vs previous
+  const metrics = [];
+  Object.entries(S.perfHistory||{}).forEach(([name,pts])=>{
+    const thisWk = pts.find(p=>p.wk===wk);
+    if (thisWk) {
+      const prev = pts.filter(p=>p.wk<wk).slice(-1)[0];
+      const trend = prev ? ` (was ${prev.value}${prev.unit||""})` : "";
+      metrics.push(`${name}: ${thisWk.value}${thisWk.unit||""}${trend}`);
+    }
+  });
+
+  // Sleep this week (average of logged nights)
+  const sleepNights = (S.sleepLog||[]).slice(-7);
+  const avgSleep = sleepNights.length ? Math.round(sleepNights.reduce((a,b)=>a+(b.mins||0),0)/sleepNights.length) : null;
+  const sleepStr = avgSleep ? `${Math.floor(avgSleep/60)}h${avgSleep%60>0?" "+(avgSleep%60)+"m":""} avg` : "not logged";
+
+  const data =
+`MY WEEK ${wk} DATA (${(phaseOf(wk)||{}).n||"training"} phase, ${daysToEvent()} days to ${S.eventName}):
+- Sessions completed: ${done}/${total}
+- Average RPE: ${avgRPE||"not logged"}
+- Sleep: ${sleepStr}
+- Lifts logged: ${lifts.length?lifts.join(", "):"none"}
+- Test/metric results: ${metrics.length?metrics.join("; "):"none this week"}`;
+
+  inp.value = `${data}\n\nGive me my weekly check-in based on this data: what's going well, what's concerning, and my single top focus for next week. Reference my actual numbers. Be concise.`;
+  sendChat();
 }
 
 async function sendChat() {
@@ -6877,24 +6554,7 @@ async function garminDirectLogin() {
   }
 }
 
-function garminDirectDisconnect() {
-  if (!confirm("Disconnect Garmin Direct? Workouts already on your watch won't be removed.")) return;
-  _gdDel("session"); _gdDel("user"); _gdDel("connected_at");
-  _syncToFirestore("gd_session", null);
-  renderGarminStatus(); renderGarminTrainingRow();
-  toast("Garmin Direct disconnected");
-}
-
 // ── Push a single session to Garmin Connect ──────────────────
-async function garminPushSession(wk, sessId) {
-  if (!gdIsSetup()) { showGarminDirectSetup(); return; }
-  const s = (S.prog[wk] || []).find(x => x.id === sessId);
-  if (!s) return;
-  // Compute the ISO date for scheduling
-  const sessionDate = _sessionDate(wk, s);
-  await _gdPush([{ ...s, wk, sessId: s.id, date: sessionDate }]);
-}
-
 // ── Push all non-done sessions for the current week ──────────
 async function garminPushWeek() {
   if (!gdIsSetup()) { showGarminDirectSetup(); return; }
@@ -6969,30 +6629,6 @@ async function _gdPush(workouts) {
 
 // ── Settings card update — show Garmin Direct connection ─────
 // Merged into renderGarminStatus() below
-function _renderGDSection(el) {
-  const connected = gdIsSetup();
-  const user      = _gdGet("user");
-  const connAt    = _gdGet("connected_at");
-  const fmtD = iso => iso ? new Date(iso).toLocaleDateString("en", { day:"numeric", month:"short" }) : "";
-  el.innerHTML = connected
-    ? `<div style="display:flex;align-items:center;gap:8px;background:var(--grn-l);border:1px solid var(--grn);border-radius:var(--rs);padding:9px 12px;margin-bottom:10px">
-        <i class="ti ti-check" style="color:var(--grn);font-size:16px"></i>
-        <div style="flex:1;font-size:12px;color:var(--grn-d)"><strong>Garmin Direct</strong> connected as ${user || "unknown"} · since ${fmtD(connAt)}</div>
-        <button class="btn btn-s" onclick="garminDirectDisconnect()" style="font-size:11px;color:var(--red);border-color:var(--red-l)">Disconnect</button>
-      </div>
-      <div style="font-size:12px;color:var(--txt2);line-height:1.5">
-        Workouts are pushed directly to Garmin Connect and scheduled to appear on your watch.
-        Sync your watch after pushing to receive them.
-      </div>`
-    : `<button onclick="showGarminDirectSetup()" class="btn btn-s"
-        style="background:#0074B8;color:#fff;border-color:#0074B8;font-weight:700;margin-bottom:10px">
-        <i class="ti ti-device-watch"></i> Set up Garmin Direct Push
-      </button>
-      <div style="font-size:12px;color:var(--txt2);line-height:1.5">
-        Authenticate once with your Garmin account to push structured workouts directly to your watch — no file import needed.
-      </div>`;
-}
-
 // ═══════════════════════════════════════════════════════
 // ICAL CALENDAR FEED SETUP
 // ═══════════════════════════════════════════════════════
@@ -7225,395 +6861,7 @@ function renderGarminTrainingRow() {
 // ── TCX workout export ───────────────────────────────────────
 
 // Map our session types to Garmin TCX sport values
-function _sessionSport(s) {
-  if (s.type === "gym" || s.gym) return "Other";
-  if (s.type === "conditioning")  return "Running";
-  if (s.type === "skills")        return "Other";
-  if (s.type === "recovery")      return "Other";
-  return "Running"; // safe default
-}
-
-// Build a TCX workout XML for one session
-function _buildTCX(sessions) {
-  const esc = s => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-
-  const workoutXml = sessions.map((s, si) => {
-    const sport   = _sessionSport(s);
-    const totalSec = (s.min || 60) * 60;
-    // Warm-up: 10 min (or 1/6 of session), cool-down: 10 min, main: remainder
-    const wuSec   = Math.min(600, Math.round(totalSec * 0.15));
-    const cdSec   = Math.min(600, Math.round(totalSec * 0.15));
-    const mainSec = totalSec - wuSec - cdSec;
-
-    const stepId = (i) => si * 10 + i;
-
-    return `
-    <Workout Sport="${sport}">
-      <Name>${esc(s.title)} — Wk${S.vwk} ${s.d}</Name>
-      <Step xsi:type="Step_t">
-        <StepId>${stepId(1)}</StepId>
-        <Name>Warm-up</Name>
-        <Duration xsi:type="Time_t"><Seconds>${wuSec}</Seconds></Duration>
-        <Intensity>Active</Intensity>
-        <Target xsi:type="None_t"/>
-      </Step>
-      <Step xsi:type="Step_t">
-        <StepId>${stepId(2)}</StepId>
-        <Name>Main set</Name>
-        <Duration xsi:type="Time_t"><Seconds>${mainSec}</Seconds></Duration>
-        <Intensity>Active</Intensity>
-        <Target xsi:type="None_t"/>
-      </Step>
-      <Step xsi:type="Step_t">
-        <StepId>${stepId(3)}</StepId>
-        <Name>Cool-down</Name>
-        <Duration xsi:type="Time_t"><Seconds>${cdSec}</Seconds></Duration>
-        <Intensity>Active</Intensity>
-        <Target xsi:type="None_t"/>
-      </Step>
-      <Notes>${esc(s.notes || "")} | T-Minus Week ${S.vwk} | ${s.min} min ${esc(s.type)}</Notes>
-      <Creator xsi:type="Device_t">
-        <Name>T-Minus Training App</Name>
-        <UnitId>0</UnitId>
-        <ProductID>0</ProductID>
-      </Creator>
-    </Workout>`;
-  }).join("\n");
-
-  return `<?xml version="1.0" encoding="utf-8"?>
-<TrainingCenterDatabase
-  xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2
-    http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
-  <Workouts>${workoutXml}
-  </Workouts>
-</TrainingCenterDatabase>`;
-}
-
-function _downloadTCX(xml, filename) {
-  const blob = new Blob([xml], { type: "application/vnd.garmin.tcx+xml" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
-}
-
-// Export a single session as a .tcx file
-function exportSessionTCX(wk, sessId) {
-  const s = (S.prog[wk] || []).find(s => s.id === sessId);
-  if (!s) { alert("Session not found."); return; }
-  const xml = _buildTCX([s]);
-  _downloadTCX(xml, `tminus-wk${wk}-${s.d}-${(s.title||"session").replace(/\s+/g,"_")}.tcx`);
-  toast("✓ Workout exported — import the .tcx file into Garmin Connect", "var(--blu)");
-}
-
-// Export all non-gym sessions for the current week
-function exportWeekTCX() {
-  const ws = (S.prog[S.vwk] || []).filter(s => s.type !== "recovery" && !s.done);
-  if (!ws.length) { alert("No sessions left to export this week."); return; }
-  const xml = _buildTCX(ws);
-  const evtName = (S.eventName || "tminus").replace(/\s+/g, "_");
-  _downloadTCX(xml, `${evtName}_week${S.vwk}.tcx`);
-  toast(`✓ ${ws.length} session${ws.length !== 1 ? "s" : ""} exported — import the .tcx file into Garmin Connect`, "var(--blu)");
-}
-
-
-// OAuth 1.0a flow + sleep data sync via /api/garmin-auth and /api/garmin-sleep
-// ═══════════════════════════════════════════════════════
-
-const GARMIN_BASE = window.location.origin;
-
-function _garminKey(k)   { return (window._userKey ? "rtw_" + window._userKey + "_" : "rtw_") + k; }
-function _garminGet(k)   { try { const v = localStorage.getItem(_garminKey(k)); return v ? JSON.parse(v) : null; } catch { return null; } }
-function _garminSet(k,v) { try { localStorage.setItem(_garminKey(k), JSON.stringify(v)); } catch {} }
-function _garminDel(k)   { try { localStorage.removeItem(_garminKey(k)); } catch {} }
-
-function garminIsConnected() {
-  return !!(  _garminGet("garmin_access_token") && _garminGet("garmin_access_secret") );
-}
-
-// ── Step 1: Initiate OAuth — redirect user to Garmin ────────
-async function garminConnect() {
-  const btn = document.getElementById("garmin-connect-btn");
-  if (btn) { btn.disabled = true; btn.textContent = "Opening Garmin…"; }
-  try {
-    const callbackUrl = GARMIN_BASE + "/?garmin_cb=1";
-    const res  = await fetch("/api/garmin-auth?action=init&callbackUrl=" + encodeURIComponent(callbackUrl));
-    const data = await res.json();
-
-    if (data.error === "GARMIN_NOT_CONFIGURED") {
-      alert("Garmin API credentials are not set up yet.\n\n" +
-            "1. Apply at: https://developer.garmin.com/health-api/\n" +
-            "2. Add GARMIN_CONSUMER_KEY + GARMIN_CONSUMER_SECRET to Vercel environment variables.\n\n" +
-            "Approval usually takes 2-5 business days.");
-      if (btn) { btn.disabled = false; btn.textContent = "Connect Garmin"; }
-      return;
-    }
-    if (data.error) throw new Error(data.error);
-
-    // Save request token temporarily so we can use it on callback
-    _garminSet("garmin_req_token",  data.requestToken);
-    _garminSet("garmin_req_secret", data.requestTokenSecret);
-
-    // Redirect to Garmin authorization page
-    window.location.href = data.authorizeUrl;
-
-  } catch (e) {
-    alert("Could not connect to Garmin: " + e.message);
-    if (btn) { btn.disabled = false; btn.textContent = "Connect Garmin"; }
-  }
-}
-
-// ── Step 2: Handle redirect-back callback ───────────────────
-async function garminHandleCallback(oauthToken, verifier) {
-  // Show a loading state on the sleep card
-  const el = document.getElementById("garmin-sleep-body");
-  if (el) el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--txt2);font-size:13px"><div class="spin spin-d"></div> Connecting to Garmin…</div>`;
-
-  const requestToken  = _garminGet("garmin_req_token");
-  const requestSecret = _garminGet("garmin_req_secret");
-  _garminDel("garmin_req_token");
-  _garminDel("garmin_req_secret");
-
-  if (!requestToken || requestToken !== oauthToken) {
-    alert("OAuth token mismatch — please try connecting again.");
-    renderGarminStatus();
-    return;
-  }
-
-  try {
-    const res  = await fetch("/api/garmin-auth?action=exchange", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestToken, requestTokenSecret: requestSecret, verifier }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.message || data.error);
-
-    _garminSet("garmin_access_token",  data.accessToken);
-    _garminSet("garmin_access_secret", data.accessTokenSecret);
-    _garminSet("garmin_connected_at",  new Date().toISOString());
-    _garminDel("garmin_last_sync");
-
-    // Also persist tokens to Firestore so other devices pick them up
-    _syncToFirestore("garmin_access_token",  data.accessToken);
-    _syncToFirestore("garmin_access_secret", data.accessTokenSecret);
-    _syncToFirestore("garmin_connected_at",  new Date().toISOString());
-
-    toast("✓ Garmin connected!", "var(--grn)");
-    renderGarminStatus();
-    // Auto-sync immediately
-    await garminSync(true);
-
-  } catch (e) {
-    alert("Garmin connection failed: " + e.message);
-    renderGarminStatus();
-  }
-}
-
-// ── Step 3: Sync sleep data ──────────────────────────────────
-async function garminSync(silent = false) {
-  if (!garminIsConnected()) { renderGarminStatus(); return; }
-
-  const syncBtn = document.getElementById("garmin-sync-btn");
-  if (syncBtn) { syncBtn.disabled = true; syncBtn.innerHTML = `<div class="spin spin-d" style="width:12px;height:12px"></div> Syncing…`; }
-
-  try {
-    const res  = await fetch("/api/garmin-sleep", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        accessToken:       _garminGet("garmin_access_token"),
-        accessTokenSecret: _garminGet("garmin_access_secret"),
-        days: 14,
-      }),
-    });
-    const data = await res.json();
-
-    if (data.error === "GARMIN_UNAUTHORIZED") {
-      // Token revoked — disconnect
-      garminDisconnect(true);
-      if (!silent) alert("Garmin session expired — please reconnect.");
-      return;
-    }
-    if (data.error) throw new Error(data.error);
-
-    // Merge Garmin entries into sleepLog, replacing existing entries for the same date
-    if (!S.sleepLog) S.sleepLog = [];
-    const existing = S.sleepLog.filter(e => e.source !== "garmin");
-    // Convert YYYY-MM-DD to display date format used by manual entries
-    const newEntries = data.sleep.map(e => ({
-      ...e,
-      date: new Date(e.date + "T12:00:00").toLocaleDateString("en", { day:"numeric", month:"short", year:"2-digit" }),
-    }));
-    S.sleepLog = [...existing, ...newEntries]
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(-60);
-    LS.s("sleepLog", S.sleepLog);
-
-    const lastSync = new Date().toISOString();
-    _garminSet("garmin_last_sync", lastSync);
-    _syncToFirestore("garmin_last_sync", lastSync);
-
-    renderSleepLog();
-    renderDash();
-    renderGarminStatus();
-    if (!silent) toast(`✓ Synced ${data.sleep.length} nights from Garmin`, "var(--grn)");
-
-  } catch (e) {
-    if (syncBtn) { syncBtn.disabled = false; syncBtn.textContent = "Sync now"; }
-    if (!silent) alert("Garmin sync failed: " + e.message);
-    renderGarminStatus();
-  }
-}
-
-// ── Disconnect ───────────────────────────────────────────────
-function garminDisconnect(silent = false) {
-  if (!silent && !confirm("Disconnect Garmin? Synced sleep entries will be kept.")) return;
-  _garminDel("garmin_access_token");
-  _garminDel("garmin_access_secret");
-  _garminDel("garmin_connected_at");
-  _garminDel("garmin_last_sync");
-  _syncToFirestore("garmin_access_token",  null);
-  _syncToFirestore("garmin_access_secret", null);
-  renderGarminStatus();
-  if (!silent) toast("Garmin disconnected");
-}
-
-// ── Render Garmin UI in both Sleep tab and Settings ──────────
-function renderGarminStatus() {
-  const connected  = garminIsConnected();
-  const connectedAt = _garminGet("garmin_connected_at");
-  const lastSync    = _garminGet("garmin_last_sync");
-
-  const fmtDate = iso => {
-    if (!iso) return null;
-    return new Date(iso).toLocaleDateString("en", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
-  };
-
-  // ── Sleep tab card ─────────────────────────────────────────
-  const sleepEl = document.getElementById("garmin-sleep-body");
-  if (sleepEl) {
-    if (!connected) {
-      sleepEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:40px;height:40px;border-radius:11px;background:#0074B820;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="ti ti-device-watch" style="font-size:20px;color:#0074B8"></i>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:700">Garmin Connect</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:1px">Connect your watch to auto-fill sleep data</div>
-          </div>
-          <button id="garmin-connect-btn" class="btn btn-s" onclick="garminConnect()"
-            style="background:#0074B8;color:#fff;border-color:#0074B8;font-weight:700;white-space:nowrap">
-            <i class="ti ti-plug-connected"></i> Connect
-          </button>
-        </div>`;
-    } else {
-      sleepEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="width:40px;height:40px;border-radius:11px;background:#0074B820;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="ti ti-device-watch" style="font-size:20px;color:#0074B8"></i>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:700;color:var(--grn)">✓ Garmin connected</div>
-            <div style="font-size:11px;color:var(--txt2);margin-top:1px">
-              ${lastSync ? "Last sync " + fmtDate(lastSync) : "Not synced yet"}
-            </div>
-          </div>
-          <button id="garmin-sync-btn" class="btn btn-s" onclick="garminSync()"
-            style="background:#0074B8;color:#fff;border-color:#0074B8;font-weight:700">
-            <i class="ti ti-refresh"></i> Sync
-          </button>
-        </div>
-        <div style="font-size:11px;color:var(--txt3)">Showing last 14 nights · <span style="cursor:pointer;color:var(--red-d);text-decoration:underline" onclick="garminDisconnect()">Disconnect</span></div>`;
-    }
-  }
-
-  // ── Settings card ──────────────────────────────────────────
-  const settingsEl = document.getElementById("garmin-settings-body");
-  if (settingsEl) {
-    const gdConnected = gdIsSetup();
-    if (!connected) {
-      settingsEl.innerHTML = `
-        <div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.6">
-          Connect your Garmin watch to automatically import sleep duration, stages (deep, REM, light),
-          sleep score and SpO₂ — no manual entry needed.
-        </div>
-        <div style="background:var(--amb-l);border:1px solid var(--amb);border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--amb-d);margin-bottom:12px;line-height:1.5">
-          <strong>Setup required:</strong> Add <code>GARMIN_CONSUMER_KEY</code> and
-          <code>GARMIN_CONSUMER_SECRET</code> to your Vercel environment variables.
-          Apply at <a href="https://developer.garmin.com/health-api/" target="_blank"
-          style="color:var(--amb-d);text-decoration:underline">developer.garmin.com/health-api</a>
-          — approval takes 2–5 days.
-        </div>
-        <button id="garmin-connect-btn" class="btn btn-p" onclick="garminConnect()">
-          <i class="ti ti-device-watch"></i> Connect Health API (sleep + activities)
-        </button>`;
-    } else {
-      settingsEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;background:var(--grn-l);border:1px solid var(--grn);border-radius:var(--rs);padding:10px 13px;margin-bottom:12px">
-          <i class="ti ti-check" style="color:var(--grn);font-size:18px"></i>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--grn-d)">Health API Connected</div>
-            <div style="font-size:11px;color:var(--grn-d);opacity:.8">
-              Since ${fmtDate(connectedAt) || "recently"} ·
-              Last sync ${fmtDate(lastSync) || "never"}
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-          <button id="garmin-sync-btn" class="btn btn-s" onclick="garminSync()"
-            style="background:#0074B8;color:#fff;border-color:#0074B8">
-            <i class="ti ti-refresh"></i> Sync sleep (last 14 nights)
-          </button>
-          <button class="btn btn-s" onclick="garminDisconnect()"
-            style="color:var(--red);border-color:var(--red-l)">
-            <i class="ti ti-plug-x"></i> Disconnect
-          </button>
-        </div>`;
-    }
-    // ── Calendar feed — always available (needs no Garmin connection) ──
-    const icalDiv = document.createElement("div");
-    icalDiv.style.cssText = "border-top:1px solid var(--bdr);padding-top:14px;margin-top:14px";
-    icalDiv.innerHTML = `
-      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📅 Calendar feed (Google · Apple · Outlook)</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Add your training plan to your phone calendar and get reminders 30 min before each session. No login needed.</div>
-      <button onclick="showCalendarSetup()" class="btn btn-p" style="font-weight:700">
-        <i class="ti ti-calendar-share"></i> Set up calendar feed
-      </button>`;
-    settingsEl.appendChild(icalDiv);
-
-    // Workout push (only relevant once Health API is connected)
-    if (connected) {
-      const gdDiv = document.createElement("div");
-      gdDiv.style.cssText = "border-top:1px solid var(--bdr);padding-top:14px;margin-top:14px";
-      gdDiv.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Workout push (training plan → watch)</div>`;
-      settingsEl.appendChild(gdDiv);
-      _renderGDSection(gdDiv);
-    }
-  }
-}
-
-// ── OAuth callback detection on page load ────────────────────
-// Runs after init() — checks if we've just returned from Garmin
-function _checkGarminCallback() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("garmin_cb") !== "1") return;
-  const oauthToken    = params.get("oauth_token");
-  const oauthVerifier = params.get("oauth_verifier");
-  // Remove query params from URL so page doesn't loop on refresh
-  window.history.replaceState({}, "", window.location.pathname);
-  if (oauthToken && oauthVerifier) {
-    // Navigate to sleep tab so the user sees the sync happening
-    goTab("sleep", document.querySelector("[onclick*=\"'sleep'\"]"));
-    setTimeout(() => garminHandleCallback(oauthToken, oauthVerifier), 400);
-  }
-}
+// Build a TCX workout XML for one session}
 
 // ─── BOOT ────────────────────────────────────────────────
 // Wait for Firebase to be ready, then check both localStorage AND Google auth state
