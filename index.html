@@ -18,193 +18,203 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
 /* ══════════════════════════════════════════════════
    T-MINUS — DESIGN SYSTEM
-   Two themes: Premium Minimal (light) · Mission Control (dark)
+   Two themes: Journal (warm/serif) · Stadium (dark/mono)
    ══════════════════════════════════════════════════ */
 
-/* ══ PREMIUM MINIMAL — default (light, ultra-clean) ══ */
+/* ══ JOURNAL — default (warm, editorial) ══ */
 :root{
-  --bg:#F2F2EF;
-  --sur:#FAFAF8;
-  --sur2:#F0F0ED;
-  --sur3:#E8E8E4;
-  --bdr:#E0E0DC;
-  --bdr2:#C8C8C4;
-  --txt:#111110;
-  --txt2:#6E6E6A;
-  --txt3:#AEAEA9;
-  --acc:#111110;
-  --acc2:#333330;
-  --acc-l:#E8E8E4;
-  --acc-d:#555550;
-  --grn:#059669;--grn-l:#ECFDF5;--grn-d:#065F46;
-  --blu:#2563EB;--blu-l:#EFF6FF;--blu-d:#1E40AF;
-  --amb:#D97706;--amb-l:#FFFBEB;--amb-d:#78350F;
-  --red:#DC2626;--red-l:#FEF2F2;--red-d:#991B1B;
-  --pur:#7C3AED;--pur-l:#F5F3FF;--pur-d:#4C1D95;
+  --bg:#EFE9DD;
+  --sur:#F6F2EA;
+  --sur2:#FBF8F1;
+  --sur3:#EDE6D8;
+  --bdr:#E4DAC8;
+  --bdr2:#D8CDBA;
+  --txt:#1C2B22;
+  --txt2:#8A6D4B;
+  --txt3:#A8917A;
+  --acc:#2E4034;
+  --acc2:#3D5443;
+  --acc-l:#E8E0D2;
+  --acc-d:#1C2B22;
+  --grn:#2E7D5B;--grn-l:#E8F0E8;--grn-d:#1E5A3E;
+  --blu:#3A6B8A;--blu-l:#E6EEF2;--blu-d:#274A60;
+  --amb:#B5792E;--amb-l:#F7EEDD;--amb-d:#7A5220;
+  --red:#B23A2E;--red-l:#F7E6E3;--red-d:#7E271D;
+  --pur:#6B5B95;--pur-l:#EEE9F2;--pur-d:#473C66;
   --sh0:none;
-  --sh1:0 1px 3px rgba(0,0,0,.04);
-  --sh2:0 4px 12px rgba(0,0,0,.06);
-  --sh3:0 12px 32px rgba(0,0,0,.08);
+  --sh1:0 1px 3px rgba(60,45,25,.06);
+  --sh2:0 4px 14px rgba(60,45,25,.09);
+  --sh3:0 12px 32px rgba(60,45,25,.12);
   --sh:var(--sh1);
   --r:14px;--rs:9px;--rx:7px;
-  --cat-vit-bg:#EFF6FF;--cat-vit-tc:#1E40AF;--cat-vit-bc:#2563EB25;
-  --cat-min-bg:#ECFDF5;--cat-min-tc:#065F46;--cat-min-bc:#05996925;
-  --cat-per-bg:#FFFBEB;--cat-per-tc:#78350F;--cat-per-bc:#D9770625;
-  --cat-rec-bg:#F5F3FF;--cat-rec-tc:#4C1D95;--cat-rec-bc:#7C3AED25;
-  --sb-bg:#FAFAF8;--sb-bdr:#E0E0DC;
+  --cat-vit-bg:#E6EEF2;--cat-vit-tc:#274A60;--cat-vit-bc:#3A6B8A25;
+  --cat-min-bg:#E8F0E8;--cat-min-tc:#1E5A3E;--cat-min-bc:#2E7D5B25;
+  --cat-per-bg:#F7EEDD;--cat-per-tc:#7A5220;--cat-per-bc:#B5792E25;
+  --cat-rec-bg:#EEE9F2;--cat-rec-tc:#473C66;--cat-rec-bc:#6B5B9525;
+  --sb-bg:#F6F2EA;--sb-bdr:#E4DAC8;
   --accent:var(--acc);--accent2:var(--acc2);
+  --font-ui:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-num:'JetBrains Mono','SF Mono',monospace;
+  --font-head:'Space Grotesk',-apple-system,sans-serif;
   color-scheme:light;
 }
 
 /* ── AUTO DARK → Mission Control ── */
 @media(prefers-color-scheme:dark){
   :root:not([data-theme]){
-    --bg:#07090D;--sur:#0C0F16;--sur2:#111520;--sur3:#161B27;
-    --bdr:#1C2536;--bdr2:#253045;
-    --txt:#D8E4FF;--txt2:#4A6080;--txt3:#2A3548;
-    --acc:#4A9EFF;--acc2:#60AEFF;--acc-l:#040C1C;--acc-d:#93C5FD;
-    --grn:#00DDB8;--grn-l:#021A16;--grn-d:#5FFCED;
-    --blu:#4A9EFF;--blu-l:#040C1C;--blu-d:#93C5FD;
+    --bg:#0F1115;--sur:#14161A;--sur2:#1D2026;--sur3:#252932;
+    --bdr:#2A2E36;--bdr2:#3A3E46;
+    --txt:#F4F6FB;--txt2:#8B92A0;--txt3:#5B616B;
+    --acc:#5B9CFF;--acc2:#7DB0FF;--acc-l:#0E1B30;--acc-d:#A8C8FF;
+    --grn:#3DDC97;--grn-l:#0A1F17;--grn-d:#7DECBB;
+    --blu:#5B9CFF;--blu-l:#0E1B30;--blu-d:#A8C8FF;
     --amb:#FFB347;--amb-l:#1A1000;--amb-d:#FFD093;
     --red:#FF5252;--red-l:#1C0808;--red-d:#FF9090;
     --pur:#B47EFF;--pur-l:#12062A;--pur-d:#D4AAFF;
     --sh0:none;--sh1:0 1px 4px rgba(0,0,0,.6);
     --sh2:0 4px 20px rgba(0,0,0,.7);--sh3:0 16px 48px rgba(0,0,0,.8);
-    --cat-vit-bg:#040C1C;--cat-vit-tc:#93C5FD;--cat-vit-bc:#4A9EFF30;
-    --cat-min-bg:#021A16;--cat-min-tc:#5FFCED;--cat-min-bc:#00DDB830;
+    --cat-vit-bg:#0E1B30;--cat-vit-tc:#A8C8FF;--cat-vit-bc:#5B9CFF30;
+    --cat-min-bg:#0A1F17;--cat-min-tc:#7DECBB;--cat-min-bc:#3DDC9730;
     --cat-per-bg:#1A1000;--cat-per-tc:#FFD093;--cat-per-bc:#FFB34730;
     --cat-rec-bg:#12062A;--cat-rec-tc:#D4AAFF;--cat-rec-bc:#B47EFF30;
-    --sb-bg:#0A0C13;--sb-bdr:#1C2536;
+    --sb-bg:#0F1115;--sb-bdr:#2A2E36;
   }
 }
 
-/* ══ [data-theme="minimal"] — forced Premium Minimal ══ */
+/* ══ [data-theme="minimal"] — Journal ══ */
 [data-theme="minimal"]{
-  --bg:#F2F2EF;--sur:#FAFAF8;--sur2:#F0F0ED;--sur3:#E8E8E4;
-  --bdr:#E0E0DC;--bdr2:#C8C8C4;
-  --txt:#111110;--txt2:#6E6E6A;--txt3:#AEAEA9;
-  --acc:#111110;--acc2:#333330;--acc-l:#E8E8E4;--acc-d:#555550;
-  --grn:#059669;--grn-l:#ECFDF5;--grn-d:#065F46;
-  --blu:#2563EB;--blu-l:#EFF6FF;--blu-d:#1E40AF;
-  --amb:#D97706;--amb-l:#FFFBEB;--amb-d:#78350F;
-  --red:#DC2626;--red-l:#FEF2F2;--red-d:#991B1B;
-  --pur:#7C3AED;--pur-l:#F5F3FF;--pur-d:#4C1D95;
-  --sh0:none;--sh1:0 1px 3px rgba(0,0,0,.04);
-  --sh2:0 4px 12px rgba(0,0,0,.06);--sh3:0 12px 32px rgba(0,0,0,.08);
+  --bg:#EFE9DD;--sur:#F6F2EA;--sur2:#FBF8F1;--sur3:#EDE6D8;
+  --bdr:#E4DAC8;--bdr2:#D8CDBA;
+  --txt:#1C2B22;--txt2:#8A6D4B;--txt3:#A8917A;
+  --acc:#2E4034;--acc2:#3D5443;--acc-l:#E8E0D2;--acc-d:#1C2B22;
+  --grn:#2E7D5B;--grn-l:#E8F0E8;--grn-d:#1E5A3E;
+  --blu:#3A6B8A;--blu-l:#E6EEF2;--blu-d:#274A60;
+  --amb:#B5792E;--amb-l:#F7EEDD;--amb-d:#7A5220;
+  --red:#B23A2E;--red-l:#F7E6E3;--red-d:#7E271D;
+  --pur:#6B5B95;--pur-l:#EEE9F2;--pur-d:#473C66;
+  --sh0:none;--sh1:0 1px 3px rgba(60,45,25,.06);
+  --sh2:0 4px 14px rgba(60,45,25,.09);--sh3:0 12px 32px rgba(60,45,25,.12);
   --sh:var(--sh1);--r:14px;--rs:9px;--rx:7px;
-  --cat-vit-bg:#EFF6FF;--cat-vit-tc:#1E40AF;--cat-vit-bc:#2563EB25;
-  --cat-min-bg:#ECFDF5;--cat-min-tc:#065F46;--cat-min-bc:#05996925;
-  --cat-per-bg:#FFFBEB;--cat-per-tc:#78350F;--cat-per-bc:#D9770625;
-  --cat-rec-bg:#F5F3FF;--cat-rec-tc:#4C1D95;--cat-rec-bc:#7C3AED25;
-  --sb-bg:#FAFAF8;--sb-bdr:#E0E0DC;color-scheme:light;
+  --cat-vit-bg:#E6EEF2;--cat-vit-tc:#274A60;--cat-vit-bc:#3A6B8A25;
+  --cat-min-bg:#E8F0E8;--cat-min-tc:#1E5A3E;--cat-min-bc:#2E7D5B25;
+  --cat-per-bg:#F7EEDD;--cat-per-tc:#7A5220;--cat-per-bc:#B5792E25;
+  --cat-rec-bg:#EEE9F2;--cat-rec-tc:#473C66;--cat-rec-bc:#6B5B9525;
+  --sb-bg:#F6F2EA;--sb-bdr:#E4DAC8;color-scheme:light;
+  --font-ui:'Space Grotesk',-apple-system,sans-serif;
+  --font-num:'Fraunces',Georgia,serif;
+  --font-head:'Fraunces',Georgia,serif;
 }
 
-/* ══ [data-theme="mission"] — Mission Control ══ */
+/* ══ [data-theme="mission"] — Stadium Scoreboard ══ */
 [data-theme="mission"]{
-  --bg:#07090D;--sur:#0C0F16;--sur2:#111520;--sur3:#161B27;
-  --bdr:#1C2536;--bdr2:#253045;
-  --txt:#D8E4FF;--txt2:#4A6080;--txt3:#2A3548;
-  --acc:#4A9EFF;--acc2:#60AEFF;--acc-l:#040C1C;--acc-d:#93C5FD;
-  --grn:#00DDB8;--grn-l:#021A16;--grn-d:#5FFCED;
-  --blu:#4A9EFF;--blu-l:#040C1C;--blu-d:#93C5FD;
-  --amb:#FFB347;--amb-l:#1A1000;--amb-d:#FFD093;
-  --red:#FF5252;--red-l:#1C0808;--red-d:#FF9090;
-  --pur:#B47EFF;--pur-l:#12062A;--pur-d:#D4AAFF;
-  --sh0:none;--sh1:0 1px 4px rgba(0,0,0,.6),0 0 0 1px rgba(74,158,255,.03);
-  --sh2:0 4px 20px rgba(0,0,0,.7),0 0 0 1px rgba(74,158,255,.05);
-  --sh3:0 16px 48px rgba(0,0,0,.8),0 0 0 1px rgba(74,158,255,.07);
+  --bg:#0F1115;--sur:#14161A;--sur2:#1D2026;--sur3:#252932;
+  --bdr:#2A2E36;--bdr2:#3A3E46;
+  --txt:#F4F6FB;--txt2:#8B92A0;--txt3:#5B616B;
+  --acc:#5B9CFF;--acc2:#7DB0FF;--acc-l:#0E1B30;--acc-d:#A8C8FF;
+  --grn:#3DDC97;--grn-l:#0A1F17;--grn-d:#7DECBB;
+  --blu:#5B9CFF;--blu-l:#0E1B30;--blu-d:#A8C8FF;
+  --amb:#FFB347;--amb-l:#1F1405;--amb-d:#FFD093;
+  --red:#FF5A5A;--red-l:#1F0A0A;--red-d:#FF9494;
+  --pur:#B47EFF;--pur-l:#160A2E;--pur-d:#D4AAFF;
+  --sh0:none;--sh1:0 1px 4px rgba(0,0,0,.5);
+  --sh2:0 4px 20px rgba(0,0,0,.6);--sh3:0 16px 48px rgba(0,0,0,.7);
   --sh:var(--sh1);--r:12px;--rs:8px;--rx:6px;
-  --cat-vit-bg:#040C1C;--cat-vit-tc:#93C5FD;--cat-vit-bc:#4A9EFF30;
-  --cat-min-bg:#021A16;--cat-min-tc:#5FFCED;--cat-min-bc:#00DDB830;
-  --cat-per-bg:#1A1000;--cat-per-tc:#FFD093;--cat-per-bc:#FFB34730;
-  --cat-rec-bg:#12062A;--cat-rec-tc:#D4AAFF;--cat-rec-bc:#B47EFF30;
-  --sb-bg:#0A0C13;--sb-bdr:#1C2536;color-scheme:dark;
+  --cat-vit-bg:#0E1B30;--cat-vit-tc:#A8C8FF;--cat-vit-bc:#5B9CFF30;
+  --cat-min-bg:#0A1F17;--cat-min-tc:#7DECBB;--cat-min-bc:#3DDC9730;
+  --cat-per-bg:#1F1405;--cat-per-tc:#FFD093;--cat-per-bc:#FFB34730;
+  --cat-rec-bg:#160A2E;--cat-rec-tc:#D4AAFF;--cat-rec-bc:#B47EFF30;
+  --sb-bg:#0F1115;--sb-bdr:#2A2E36;color-scheme:dark;
+  --font-ui:'Space Grotesk',-apple-system,sans-serif;
+  --font-num:'JetBrains Mono','SF Mono',monospace;
 }
 
 /* ── MISSION CONTROL component overrides ── */
 [data-theme="mission"] .app-name{
-  color:#4A9EFF;background:none;-webkit-text-fill-color:#4A9EFF;letter-spacing:-1px;
+  color:#5B9CFF;background:none;-webkit-text-fill-color:#5B9CFF;letter-spacing:-1px;
 }
-[data-theme="mission"] .app-sub{color:#2A3548;letter-spacing:2px;text-transform:uppercase;font-size:9px}
-[data-theme="mission"] .sidebar{background:#0A0C13;border-right:1px solid #1C2536}
-[data-theme="mission"] .sidebar-logo{border-bottom:1px solid #1C2536}
+[data-theme="mission"] .app-sub{color:#5B616B;letter-spacing:2px;text-transform:uppercase;font-size:9px}
+[data-theme="mission"] .sidebar{background:#0F1115;border-right:1px solid #2A2E36}
+[data-theme="mission"] .sidebar-logo{border-bottom:1px solid #2A2E36}
 [data-theme="mission"] .sidebar-cd{
-  background:#0C0F16;border:1px solid #1C2536;
+  background:#14161A;border:1px solid #2A2E36;
   border-radius:10px;box-shadow:none;
 }
 [data-theme="mission"] .sidebar-cd .cd-n{
-  font-size:56px;color:#4A9EFF!important;background:none!important;
-  -webkit-text-fill-color:#4A9EFF!important;font-variant-numeric:tabular-nums;
-  letter-spacing:-4px;
+  font-size:54px;color:#5B9CFF!important;background:none!important;font-family:var(--font-num);font-weight:500;
+  -webkit-text-fill-color:#5B9CFF!important;font-variant-numeric:tabular-nums;
+  letter-spacing:-2px;
 }
 [data-theme="mission"] .sidebar-cd .cd-l{
-  color:#2A3548;letter-spacing:3px;text-transform:uppercase;font-size:9px;font-weight:700;
+  color:#5B616B;letter-spacing:3px;text-transform:uppercase;font-size:9px;font-weight:700;
 }
-[data-theme="mission"] .sidebar-nav .tab{color:#4A6080;border-left:2px solid transparent}
-[data-theme="mission"] .sidebar-nav .tab:hover{background:#0C0F16;color:#D8E4FF}
+[data-theme="mission"] .sidebar-nav .tab{color:#8B92A0;border-left:2px solid transparent}
+[data-theme="mission"] .sidebar-nav .tab:hover{background:#14161A;color:#F4F6FB}
 [data-theme="mission"] .sidebar-nav .tab.on{
-  background:rgba(74,158,255,.07);color:#4A9EFF;border-left:2px solid #4A9EFF;font-weight:600;
+  background:rgba(91,156,255,.07);color:#5B9CFF;border-left:2px solid #5B9CFF;font-weight:600;
 }
-[data-theme="mission"] .sidebar-nav .tab.on i{color:#4A9EFF}
-[data-theme="mission"] .mobile-header{background:#0C0F16;border-bottom:1px solid #1C2536}
-[data-theme="mission"] .hdr{background:#0A0C13;border-bottom:1px solid #1C2536}
-[data-theme="mission"] .cd-wrap{background:#0C0F16;border:1px solid #1C2536;box-shadow:none}
-[data-theme="mission"] .cd-wrap .cd-n{color:#4A9EFF!important;-webkit-text-fill-color:#4A9EFF!important}
-[data-theme="mission"] .cd-wrap .cd-l{color:#2A3548!important}
-[data-theme="mission"] .tab.on{background:rgba(74,158,255,.08);color:#4A9EFF;border-bottom-color:#4A9EFF}
-[data-theme="mission"] .btn-p{background:#4A9EFF;border-color:#4A9EFF;color:#07090D;box-shadow:0 2px 12px rgba(74,158,255,.25)}
-[data-theme="mission"] .btn-p:hover{background:#60AEFF;box-shadow:0 4px 20px rgba(74,158,255,.35);transform:translateY(-1px)}
-[data-theme="mission"] .pbar2-f,[data-theme="mission"] .w-prog-f{background:linear-gradient(90deg,#00DDB8,#4A9EFF)}
-[data-theme="mission"] .sess{border-left-color:#4A9EFF}
-[data-theme="mission"] .card{border-color:#1C2536}
-[data-theme="mission"] input[type=range]{accent-color:#4A9EFF}
-[data-theme="mission"] .stat{background:#0C0F16!important;box-shadow:0 0 0 1px #1C2536}
-[data-theme="mission"] .ppill.active,[data-theme="mission"] .chip.active{background:rgba(74,158,255,.1);border-color:#4A9EFF;color:#4A9EFF}
-[data-theme="mission"] .wka:hover{border-color:#4A9EFF;color:#4A9EFF}
+[data-theme="mission"] .sidebar-nav .tab.on i{color:#5B9CFF}
+[data-theme="mission"] .mobile-header{background:#14161A;border-bottom:1px solid #2A2E36}
+[data-theme="mission"] .hdr{background:#0F1115;border-bottom:1px solid #2A2E36}
+[data-theme="mission"] .cd-wrap{background:#14161A;border:1px solid #2A2E36;box-shadow:none}
+[data-theme="mission"] .cd-wrap .cd-n{color:#5B9CFF!important;-webkit-text-fill-color:#5B9CFF!important}
+[data-theme="mission"] .cd-wrap .cd-l{color:#5B616B!important}
+[data-theme="mission"] .tab.on{background:rgba(91,156,255,.08);color:#5B9CFF;border-bottom-color:#5B9CFF}
+[data-theme="mission"] .btn-p{background:#5B9CFF;border-color:#5B9CFF;color:#0F1115;box-shadow:0 2px 12px rgba(91,156,255,.25)}
+[data-theme="mission"] .btn-p:hover{background:#7DB0FF;box-shadow:0 4px 20px rgba(91,156,255,.35);transform:translateY(-1px)}
+[data-theme="mission"] .pbar2-f,[data-theme="mission"] .w-prog-f{background:linear-gradient(90deg,#3DDC97,#5B9CFF)}
+[data-theme="mission"] .sess{border-left-color:#5B9CFF}
+[data-theme="mission"] .card{border-color:#2A2E36}
+[data-theme="mission"] input[type=range]{accent-color:#5B9CFF}
+[data-theme="mission"] .stat{background:#14161A!important;box-shadow:0 0 0 1px #2A2E36}
+[data-theme="mission"] .ppill.active,[data-theme="mission"] .chip.active{background:rgba(91,156,255,.1);border-color:#5B9CFF;color:#5B9CFF}
+[data-theme="mission"] .wka:hover{border-color:#5B9CFF;color:#5B9CFF}
 
 /* ── PREMIUM MINIMAL component overrides ── */
 [data-theme="minimal"] .app-name{
   background:none;-webkit-text-fill-color:#111110;color:#111110;
   font-weight:300;letter-spacing:-1.5px;
 }
-[data-theme="minimal"] .app-sub{font-size:10px;color:#AEAEA9;letter-spacing:1px}
-[data-theme="minimal"] .sidebar{background:#FAFAF8;border-right:1px solid #E0E0DC}
-[data-theme="minimal"] .sidebar-logo{border-bottom:1px solid #E0E0DC}
+[data-theme="minimal"] .app-sub{font-size:10px;color:#A8917A;letter-spacing:1px}
+[data-theme="minimal"] .sidebar{background:#F6F2EA;border-right:1px solid #E4DAC8}
+[data-theme="minimal"] .sidebar-logo{border-bottom:1px solid #E4DAC8}
 [data-theme="minimal"] .sidebar-cd{
   background:#F0F0ED;border:1px solid #E0E0DC;border-radius:12px;box-shadow:none;
   text-align:center;padding:20px;
 }
 [data-theme="minimal"] .sidebar-cd .cd-n{
-  font-size:64px;font-weight:200;letter-spacing:-5px;line-height:1;
-  color:#111110!important;background:none!important;-webkit-text-fill-color:#111110!important;
+  font-size:60px;font-weight:600;letter-spacing:-2px;line-height:1;font-family:var(--font-num);
+  color:#1C2B22!important;background:none!important;-webkit-text-fill-color:#1C2B22!important;
 }
 [data-theme="minimal"] .sidebar-cd .cd-l{
-  color:#AEAEA9;letter-spacing:2px;text-transform:uppercase;font-size:9px;font-weight:500;margin-top:4px;
+  color:#A8917A;letter-spacing:2px;text-transform:uppercase;font-size:9px;font-weight:500;margin-top:4px;
 }
-[data-theme="minimal"] .sidebar-nav .tab{color:#6E6E6A;font-weight:400;border-left:2px solid transparent}
-[data-theme="minimal"] .sidebar-nav .tab:hover{background:#F0F0ED;color:#111110}
+[data-theme="minimal"] .sidebar-nav .tab{color:#8A6D4B;font-weight:400;border-left:2px solid transparent}
+[data-theme="minimal"] .sidebar-nav .tab:hover{background:#FBF8F1;color:#1C2B22}
 [data-theme="minimal"] .sidebar-nav .tab.on{
   background:#F0F0ED;color:#111110;border-left:2px solid #111110;font-weight:600;
 }
-[data-theme="minimal"] .mobile-header{background:#FAFAF8;border-bottom:1px solid #E0E0DC}
-[data-theme="minimal"] .hdr{background:#FAFAF8;border-bottom:1px solid #E0E0DC;box-shadow:none}
-[data-theme="minimal"] .cd-wrap{background:#111110;border:none;box-shadow:none}
-[data-theme="minimal"] .tab.on{color:#111110;border-bottom-color:#111110;background:transparent}
+[data-theme="minimal"] .mobile-header{background:#F6F2EA;border-bottom:1px solid #E4DAC8}
+[data-theme="minimal"] .hdr{background:#F6F2EA;border-bottom:1px solid #E4DAC8;box-shadow:none}
+[data-theme="minimal"] .cd-wrap{background:#1C2B22;border:none;box-shadow:none}
+[data-theme="minimal"] .tab.on{color:#1C2B22;border-bottom-color:#1C2B22;background:transparent}
 [data-theme="minimal"] .btn-p{
   background:#111110;border-color:#111110;color:#FAFAF8;
   box-shadow:none;font-weight:500;
 }
-[data-theme="minimal"] .btn-p:hover{background:#333330;box-shadow:none;transform:none}
-[data-theme="minimal"] .pbar2-f,[data-theme="minimal"] .w-prog-f{background:#111110}
-[data-theme="minimal"] .sess{border-left-color:#111110}
-[data-theme="minimal"] .card{border-color:#E0E0DC;box-shadow:none}
-[data-theme="minimal"] input[type=range]{accent-color:#111110}
-[data-theme="minimal"] .stat{box-shadow:none!important;border:1px solid #E0E0DC!important}
-[data-theme="minimal"] .ppill.active,[data-theme="minimal"] .chip.active{background:#111110;border-color:#111110;color:#FAFAF8}
-[data-theme="minimal"] .w-prog-f{background:#111110}
+[data-theme="minimal"] .btn-p:hover{background:#3D5443;box-shadow:none;transform:none}
+[data-theme="minimal"] .pbar2-f,[data-theme="minimal"] .w-prog-f{background:#1C2B22}
+[data-theme="minimal"] .sess{border-left-color:#1C2B22}
+[data-theme="minimal"] .card{border-color:#E4DAC8;box-shadow:none}
+[data-theme="minimal"] input[type=range]{accent-color:#1C2B22}
+[data-theme="minimal"] .stat{box-shadow:none!important;border:1px solid #E4DAC8!important}
+[data-theme="minimal"] .ppill.active,[data-theme="minimal"] .chip.active{background:#1C2B22;border-color:#1C2B22;color:#F6F2EA}
+[data-theme="minimal"] .w-prog-f{background:#1C2B22}
 
 /* ── WHITE text guaranteed on mobile cd-wrap (both themes) ── */
 .cd-wrap .cd-n,.cd-wrap .cd-l{
@@ -213,8 +223,8 @@ if ('serviceWorker' in navigator) {
   -webkit-text-fill-color:#fff!important;background-clip:initial!important;
 }
 [data-theme="minimal"] .cd-wrap .cd-n,[data-theme="minimal"] .cd-wrap .cd-l{color:#fff!important;-webkit-text-fill-color:#fff!important}
-[data-theme="mission"] .cd-wrap .cd-n{color:#4A9EFF!important;-webkit-text-fill-color:#4A9EFF!important}
-[data-theme="mission"] .cd-wrap .cd-l{color:#2A3548!important;-webkit-text-fill-color:#2A3548!important}
+[data-theme="mission"] .cd-wrap .cd-n{color:#5B9CFF!important;-webkit-text-fill-color:#5B9CFF!important}
+[data-theme="mission"] .cd-wrap .cd-l{color:#5B616B!important;-webkit-text-fill-color:#5B616B!important}
 .stat .sl,.stat .sv,.stat .ss{-webkit-text-fill-color:inherit}
 
 /* ── THEME SWITCHER ── */
@@ -231,7 +241,7 @@ if ('serviceWorker' in navigator) {
 /* ══ BASE ══════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI Variable','Inter',sans-serif;font-size:15px;color:var(--txt);background:var(--bg);min-height:100%;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-ui);font-size:15px;color:var(--txt);background:var(--bg);min-height:100%;-webkit-font-smoothing:antialiased}
 
 /* ══ LAYOUT ════════════════════════════════════════ */
 .app-shell{max-width:1600px;margin:0 auto;display:flex;min-height:100vh}
@@ -309,9 +319,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI Var
   box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:84px;
 }
 .cd-n{
-  font-size:32px;font-weight:900;letter-spacing:-2px;line-height:1;
+  font-size:32px;font-weight:700;letter-spacing:-1px;line-height:1;
   color:#fff;background:none;-webkit-background-clip:initial;
-  -webkit-text-fill-color:#fff;
+  -webkit-text-fill-color:#fff;font-family:var(--font-num);font-variant-numeric:tabular-nums;
 }
 .cd-l{font-size:9px;color:rgba(255,255,255,.8);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
 /* Phase bar */
@@ -349,7 +359,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI Var
 .cp{padding:18px}
 
 /* ══ TYPOGRAPHY ════════════════════════════════════ */
-.ctitle{font-size:16px;font-weight:800;letter-spacing:-.4px;line-height:1.3}
+.ctitle{font-size:16px;font-weight:600;letter-spacing:-.4px;line-height:1.3;font-family:var(--font-head)}
 .csub{font-size:13px;color:var(--txt2);margin-top:3px;line-height:1.55;font-weight:400}
 
 /* ══ STATS GRID ════════════════════════════════════ */
@@ -357,7 +367,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI Var
 .stat{border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
 .stat::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none}
 .sl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;opacity:.75;margin-bottom:6px}
-.sv{font-size:32px;font-weight:900;line-height:1;letter-spacing:-1.5px}
+.sv{font-size:34px;font-weight:700;line-height:1;letter-spacing:-1px;font-family:var(--font-num);font-variant-numeric:tabular-nums}
 .ss{font-size:11px;font-weight:600;opacity:.7;margin-top:4px}
 
 /* ══ INTERACTIVE ELEMENTS ══════════════════════════ */
@@ -474,12 +484,12 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 
 /* ══ VISUAL POLISH LAYER ════════════════════════════ */
 /* Mission Control: primary buttons get the signature blue glow */
-[data-theme="mission"] .btn-p{box-shadow:0 2px 14px rgba(74,158,255,.3)}
-[data-theme="mission"] .btn-p:hover{box-shadow:0 4px 22px rgba(74,158,255,.45)}
-[data-theme="mission"] .cd-wrap{box-shadow:0 4px 20px rgba(74,158,255,.25)}
+[data-theme="mission"] .btn-p{box-shadow:0 2px 14px rgba(91,156,255,.3)}
+[data-theme="mission"] .btn-p:hover{box-shadow:0 4px 22px rgba(91,156,255,.45)}
+[data-theme="mission"] .cd-wrap{box-shadow:0 4px 20px rgba(91,156,255,.25)}
 @media(prefers-color-scheme:dark){
-  :root:not([data-theme]) .btn-p{box-shadow:0 2px 14px rgba(74,158,255,.3)}
-  :root:not([data-theme]) .cd-wrap{box-shadow:0 4px 20px rgba(74,158,255,.25)}
+  :root:not([data-theme]) .btn-p{box-shadow:0 2px 14px rgba(91,156,255,.3)}
+  :root:not([data-theme]) .cd-wrap{box-shadow:0 4px 20px rgba(91,156,255,.25)}
 }
 
 /* Richer stat cards — subtle gradient sheen + lift on press */
@@ -487,7 +497,7 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 .stat::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(160deg,rgba(255,255,255,.10),transparent 55%);pointer-events:none}
 .stat.tappable{cursor:pointer}
 .stat.tappable:active{transform:scale(.97)}
-.sv{font-size:34px;font-weight:900;line-height:1;letter-spacing:-2px}
+.sv{font-size:34px;font-weight:700;line-height:1;letter-spacing:-1px;font-family:var(--font-num);font-variant-numeric:tabular-nums}
 
 /* Cards: smoother hover/press */
 .card{transition:box-shadow .25s,transform .15s}
@@ -513,7 +523,7 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
 
 /* Water number — gradient text */
 .w-num{background:linear-gradient(135deg,#60A5FA,#2563EB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-[data-theme="mission"] .w-num{background:linear-gradient(135deg,#4A9EFF,#00DDB8);-webkit-background-clip:text;background-clip:text}
+[data-theme="mission"] .w-num{background:linear-gradient(135deg,#5B9CFF,#3DDC97);-webkit-background-clip:text;background-clip:text}
 
 /* Cleaner desktop scrollbars */
 *::-webkit-scrollbar{width:8px;height:8px}
@@ -613,8 +623,8 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
         <div class="app-sub">Event Readiness Companion</div>
       </div>
       <div class="theme-switcher" id="sb-theme-sw">
-        <button class="theme-btn" onclick="setTheme('minimal')" title="minimal">Minimal</button>
-        <button class="theme-btn" onclick="setTheme('mission')" title="mission">Mission</button>
+        <button class="theme-btn" onclick="setTheme('minimal')" title="minimal">Journal</button>
+        <button class="theme-btn" onclick="setTheme('mission')" title="mission">Stadium</button>
       </div>
     </div>
   </div>
@@ -644,8 +654,8 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
       <div style="font-size:12px;color:var(--txt2);margin-top:2px">Event Readiness Companion</div>
     </div>
     <div class="theme-switcher" id="mob-theme-sw">
-      <button class="theme-btn" onclick="setTheme('minimal')" title="minimal">Minimal</button>
-      <button class="theme-btn" onclick="setTheme('mission')" title="mission">Mission</button>
+      <button class="theme-btn" onclick="setTheme('minimal')" title="minimal">Journal</button>
+      <button class="theme-btn" onclick="setTheme('mission')" title="mission">Stadium</button>
     </div>
   </div>
 </div>
@@ -1248,20 +1258,20 @@ textarea:focus{border-color:var(--acc);background:var(--sur);box-shadow:0 0 0 3p
     </div>
     <div style="display:flex;gap:12px;padding:20px 16px">
       <button onclick="setTheme('minimal')" id="set-tb-minimal"
-        style="flex:1;padding:20px 12px;border-radius:14px;border:2px solid var(--bdr);background:#F2F2EF;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px">
-        <div style="font-size:32px;font-weight:200;letter-spacing:-3px;color:#111110;line-height:1">42</div>
-        <div style="font-size:9px;color:#AEAEA9;letter-spacing:2px;text-transform:uppercase">days to event</div>
-        <div style="width:100%;height:1px;background:#E0E0DC;margin:4px 0"></div>
-        <span style="font-size:13px;font-weight:600;color:#111110">Premium Minimal</span>
-        <span style="font-size:10px;color:#AEAEA9">Light · Clean · WHOOP-style</span>
+        style="flex:1;padding:20px 12px;border-radius:14px;border:2px solid var(--bdr);background:#F6F2EA;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div style="font-size:34px;font-weight:600;letter-spacing:-1px;color:#1C2B22;line-height:1;font-family:Fraunces,Georgia,serif">42</div>
+        <div style="font-size:9px;color:#A8917A;letter-spacing:2px;text-transform:uppercase">days to event</div>
+        <div style="width:100%;height:1px;background:#E4DAC8;margin:4px 0"></div>
+        <span style="font-size:13px;font-weight:600;color:#1C2B22;font-family:Fraunces,Georgia,serif">Journal</span>
+        <span style="font-size:10px;color:#A8917A">Warm · Serif · Editorial</span>
       </button>
       <button onclick="setTheme('mission')" id="set-tb-mission"
-        style="flex:1;padding:20px 12px;border-radius:14px;border:2px solid var(--bdr);background:#07090D;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px">
-        <div style="font-size:32px;font-weight:900;letter-spacing:-3px;color:#4A9EFF;line-height:1">42</div>
-        <div style="font-size:9px;color:#2A3548;letter-spacing:3px;text-transform:uppercase">days to event</div>
-        <div style="width:100%;height:1px;background:#1C2536;margin:4px 0"></div>
-        <span style="font-size:13px;font-weight:700;color:#D8E4FF">Mission Control</span>
-        <span style="font-size:10px;color:#4A6080">Dark · Neon · Garmin-style</span>
+        style="flex:1;padding:20px 12px;border-radius:14px;border:2px solid var(--bdr);background:#0F1115;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div style="font-size:34px;font-weight:500;letter-spacing:-1px;color:#5B9CFF;line-height:1;font-family:'JetBrains Mono',monospace">42</div>
+        <div style="font-size:9px;color:#5B616B;letter-spacing:3px;text-transform:uppercase">days to event</div>
+        <div style="width:100%;height:1px;background:#2A2E36;margin:4px 0"></div>
+        <span style="font-size:13px;font-weight:600;color:#F4F6FB">Stadium</span>
+        <span style="font-size:10px;color:#8B92A0">Dark · Mono · Scoreboard</span>
       </button>
     </div>
   </div>
@@ -2223,9 +2233,11 @@ async function _doFirestoreWrite(k, v, ns) {
   const safeK = String(k).replace(/[/.]/g, "_").substring(0, 100);
   _setSyncStatus("syncing");
   try {
-    const payload = (typeof v === "object" && v !== null)
-      ? { _json: true, v: JSON.stringify(v) }
-      : { v };
+    // Firestore rejects undefined — coerce it to null so the write never fails
+    const val = v === undefined ? null : v;
+    const payload = (typeof val === "object" && val !== null)
+      ? { _json: true, v: JSON.stringify(val) }
+      : { v: val === undefined ? null : val };
     await window._db.collection("users").doc(ns).collection("data").doc(safeK).set(payload);
     _setSyncStatus("synced");
   } catch(e) {
@@ -3055,7 +3067,7 @@ function setTheme(t) {
   if (t === "dark"  || t === "elite")       t = "mission";
   LS.s("theme", t);
   document.documentElement.setAttribute("data-theme", t);
-  const themeColors = { minimal:"#111110", mission:"#4A9EFF" };
+  const themeColors = { minimal:"#111110", mission:"#5B9CFF" };
   const metaTC = document.getElementById("meta-theme-color");
   if (metaTC) metaTC.content = themeColors[t] || "#111110";
   document.querySelectorAll(".theme-btn").forEach(btn => {
@@ -3714,7 +3726,8 @@ async function saveSettings() {
         const batch = window._db.batch();
         const col = (k) => window._db.collection("users").doc(ns).collection("data").doc(k);
         Object.entries(settingsMap).forEach(([k, v]) => {
-          batch.set(col(k), (typeof v === "object" && v !== null) ? { _json:true, v:JSON.stringify(v) } : { v });
+          const val = v === undefined ? null : v;
+          batch.set(col(k), (typeof val === "object" && val !== null) ? { _json:true, v:JSON.stringify(val) } : { v: val });
         });
         _setSyncStatus("syncing");
         await batch.commit();
